@@ -1,0 +1,695 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  admin
+  manager
+  employee
+  client
+}
+
+model Agency {
+  id                 String   @id @default(uuid())
+  name               String
+  whiteLabelLogoUrl  String?
+  createdAt          DateTime @default(now())
+  users              User[]
+  clients            Client[]
+  competitors        Competitor[]
+  alerts             Alert[]
+  reportTemplates    ReportTemplate[]
+  taskTemplates      TaskTemplate[]
+  dataSources        DataSource[]
+}
+
+model Role {
+  id    Int      @id @default(autoincrement())
+  name  RoleName @unique
+  users User[]
+}
+
+model User {
+  id             String             @id @default(uuid())
+  agencyId       String
+  roleId         Int
+  email          String             @unique
+  passwordHash   String
+  fullName       String?
+  isActive       Boolean            @default(true)
+  clientId       String?
+  createdAt      DateTime           @default(now())
+  agency         Agency             @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  role           Role               @relation(fields: [roleId], references: [id])
+  client         Client?            @relation(fields: [clientId], references: [id])
+  assignments    ClientAssignment[]
+  taskComments   TaskComment[]
+  uploadedFiles  TaskAttachment[]
+  aiRequests     AiRequest[]
+  permissionOverrides PermissionOverride[]
+
+  @@index([agencyId])
+}
+
+model Client {
+  id              String             @id @default(uuid())
+  agencyId        String
+  companyName     String
+  status          String             @default("active")
+  retainerAmount  Decimal?           @db.Decimal(10, 2)
+  retainerCycle   String?
+  onboardedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  agency          Agency             @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  users           User[]
+  contacts        ClientContact[]
+  assignments     ClientAssignment[]
+  notes           ClientNote[]
+  websites        Website[]
+  competitors     Competitor[]
+  tasks           Task[]
+  reports         Report[]
+  integrations    Integration[]
+  alerts          Alert[]
+  contentClusters ContentCluster[]
+  contentBriefs   ContentBrief[]
+  dataSources     DataSource[]
+
+  @@index([agencyId])
+}
+
+model ClientContact {
+  id        String  @id @default(uuid())
+  clientId  String
+  name      String?
+  email     String?
+  phone     String?
+  roleTitle String?
+  isPrimary Boolean @default(false)
+  client    Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model ClientAssignment {
+  id         String   @id @default(uuid())
+  clientId   String
+  userId     String
+  assignedAt DateTime @default(now())
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([userId])
+}
+
+model ClientNote {
+  id        String   @id @default(uuid())
+  clientId  String
+  authorId  String?
+  note      String?
+  createdAt DateTime @default(now())
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+}
+
+model Website {
+  id                  String              @id @default(uuid())
+  clientId            String
+  domain              String
+  status              String              @default("active")
+  seoScore            Int?
+  lastAuditAt         DateTime?
+  cms                 String?
+  businessCategory    String?
+  targetLocations     Json                @default("[]")
+  targetSearchEngines Json                @default("[\"google\"]")
+  preferredLocale     String?
+  primaryCountry      String?
+  isMock              Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  client              Client              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  competitors         Competitor[]
+  keywordGroups       KeywordGroup[]
+  keywords            Keyword[]
+  backlinks           Backlink[]
+  audits              SeoAudit[]
+  crawlRuns           CrawlRun[]
+  pageMetrics         PageMetric[]
+  tasks               Task[]
+  alerts              Alert[]
+  contentClusters     ContentCluster[]
+  contentBriefs       ContentBrief[]
+
+  @@index([clientId])
+}
+
+model Competitor {
+  id          String                @id @default(uuid())
+  agencyId    String
+  clientId    String
+  websiteId   String
+  domain      String
+  name        String?
+  notes       String?
+  priority    String                @default("medium")
+  source      String                @default("manual")
+  createdAt   DateTime              @default(now())
+  agency      Agency                @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client      Client                @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website     Website               @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  keywords    CompetitorKeyword[]
+  pages       CompetitorPage[]
+  backlinks   CompetitorBacklink[]
+
+  @@index([agencyId])
+  @@index([clientId])
+  @@index([websiteId])
+}
+
+model CompetitorKeyword {
+  id              String     @id @default(uuid())
+  competitorId    String
+  keyword         String
+  rankPosition    Int?
+  searchVolume    Int?
+  difficulty      Int?
+  trafficEstimate Int?
+  targetUrl       String?
+  recordedAt      DateTime
+  source          String     @default("mock")
+  competitor      Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId])
+}
+
+model CompetitorPage {
+  id               String     @id @default(uuid())
+  competitorId     String
+  url              String
+  title            String?
+  estimatedTraffic Int?
+  keywordCount     Int?
+  backlinkCount    Int?
+  recordedAt       DateTime
+  source           String     @default("mock")
+  competitor       Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId])
+}
+
+model CompetitorBacklink {
+  id              String     @id @default(uuid())
+  competitorId    String
+  sourceUrl       String?
+  targetUrl       String?
+  domainAuthority Int?
+  anchorText      String?
+  isDofollow      Boolean?
+  discoveredAt    DateTime?
+  source          String     @default("mock")
+  competitor      Competitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@index([competitorId])
+}
+
+model KeywordGroup {
+  id        String    @id @default(uuid())
+  websiteId String
+  name      String?
+  website   Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  keywords  Keyword[]
+
+  @@index([websiteId])
+}
+
+model Keyword {
+  id           String           @id @default(uuid())
+  websiteId    String
+  groupId      String?
+  keyword      String
+  searchVolume Int?
+  difficulty   Int?
+  cpc          Decimal?         @db.Decimal(10, 2)
+  intent       String?
+  device       String?
+  location     String?
+  language     String?
+  targetPage   String?
+  status       String           @default("tracking")
+  source       String           @default("mock")
+  createdAt    DateTime         @default(now())
+  website      Website          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  group        KeywordGroup?    @relation(fields: [groupId], references: [id])
+  rankings     KeywordRanking[]
+  serpSnapshots SerpSnapshot[]
+
+  @@index([websiteId])
+}
+
+model KeywordRanking {
+  id           String   @id @default(uuid())
+  keywordId    String
+  rankPosition Int?
+  recordedAt   DateTime
+  source       String   @default("mock")
+  keyword      Keyword  @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@index([keywordId, recordedAt])
+}
+
+model SerpSnapshot {
+  id         String        @id @default(uuid())
+  keywordId  String
+  recordedAt DateTime
+  location   String?
+  device     String?
+  source     String        @default("mock")
+  keyword    Keyword       @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  features   SerpFeature[]
+
+  @@index([keywordId, recordedAt])
+}
+
+model SerpFeature {
+  id             String       @id @default(uuid())
+  serpSnapshotId String
+  featureType    String
+  ownedByClient  Boolean      @default(false)
+  rankingUrl     String?
+  serpSnapshot   SerpSnapshot @relation(fields: [serpSnapshotId], references: [id], onDelete: Cascade)
+
+  @@index([serpSnapshotId])
+}
+
+model Backlink {
+  id              String    @id @default(uuid())
+  websiteId       String
+  sourceUrl       String?
+  targetUrl       String?
+  domainAuthority Int?
+  anchorText      String?
+  isDofollow      Boolean?
+  discoveredAt    DateTime?
+  source          String    @default("mock")
+  website         Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+}
+
+model SeoAudit {
+  id          String     @id @default(uuid())
+  websiteId   String
+  runAt       DateTime   @default(now())
+  overallScore Int?
+  triggeredBy String?
+  website     Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  issues      SeoIssue[]
+
+  @@index([websiteId])
+}
+
+model SeoIssue {
+  id          String   @id @default(uuid())
+  auditId     String
+  issueType   String?
+  severity    String?
+  affectedUrl String?
+  description String?
+  resolved    Boolean  @default(false)
+  audit       SeoAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+}
+
+model CrawlRun {
+  id          String       @id @default(uuid())
+  agencyId    String
+  clientId    String
+  websiteId   String
+  status      String       @default("queued")
+  startedAt   DateTime?
+  completedAt DateTime?
+  totalUrls   Int          @default(0)
+  source      String       @default("mock")
+  triggeredBy String?
+  website     Website      @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  crawledUrls CrawledUrl[]
+
+  @@index([agencyId])
+  @@index([clientId])
+  @@index([websiteId])
+}
+
+model CrawledUrl {
+  id              String           @id @default(uuid())
+  crawlRunId      String
+  websiteId       String
+  url             String
+  statusCode      Int?
+  title           String?
+  metaDescription String?
+  h1              String?
+  canonicalUrl    String?
+  isIndexable     Boolean?
+  wordCount       Int?
+  loadTimeMs      Int?
+  depth           Int?
+  discoveredAt    DateTime         @default(now())
+  crawlRun        CrawlRun         @relation(fields: [crawlRunId], references: [id], onDelete: Cascade)
+  checks          TechnicalCheck[]
+
+  @@index([crawlRunId])
+  @@index([websiteId])
+}
+
+model TechnicalCheck {
+  id           String      @id @default(uuid())
+  crawlRunId   String
+  crawledUrlId String?
+  checkType    String
+  severity     String
+  status       String      @default("open")
+  description  String?
+  recommendation String?
+  createdAt    DateTime    @default(now())
+  resolvedAt   DateTime?
+  crawledUrl   CrawledUrl? @relation(fields: [crawledUrlId], references: [id], onDelete: Cascade)
+
+  @@index([crawlRunId])
+  @@index([crawledUrlId])
+}
+
+model PageMetric {
+  id              String   @id @default(uuid())
+  websiteId       String
+  url             String
+  clicks          Int?
+  impressions     Int?
+  ctr             Decimal? @db.Decimal(6, 4)
+  avgPosition     Decimal? @db.Decimal(6, 2)
+  organicSessions Int?
+  conversions     Int?
+  recordedAt      DateTime
+  source          String   @default("mock")
+  website         Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, recordedAt])
+}
+
+model Project {
+  id        String   @id @default(uuid())
+  clientId  String
+  name      String?
+  createdAt DateTime @default(now())
+  tasks     Task[]
+
+  @@index([clientId])
+}
+
+model Task {
+  id          String           @id @default(uuid())
+  projectId   String?
+  clientId    String
+  websiteId   String?
+  assignedTo  String?
+  createdBy   String?
+  title       String
+  category    String?
+  priority    String           @default("medium")
+  status      String           @default("todo")
+  deadline    DateTime?
+  createdAt   DateTime         @default(now())
+  project     Project?         @relation(fields: [projectId], references: [id])
+  client      Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website     Website?         @relation(fields: [websiteId], references: [id])
+  comments    TaskComment[]
+  attachments TaskAttachment[]
+
+  @@index([clientId, status])
+  @@index([websiteId])
+  @@index([assignedTo])
+}
+
+model TaskComment {
+  id         String   @id @default(uuid())
+  taskId     String
+  authorId   String?
+  comment    String?
+  isInternal Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author     User?    @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
+}
+
+model TaskAttachment {
+  id         String   @id @default(uuid())
+  taskId     String
+  fileUrl    String?
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploader   User?    @relation(fields: [uploadedBy], references: [id])
+
+  @@index([taskId])
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  entityType String?
+  entityId   String?
+  actorId    String?
+  action     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  message   String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Alert {
+  id         String   @id @default(uuid())
+  agencyId   String
+  clientId   String
+  websiteId  String?
+  alertType  String
+  severity   String   @default("medium")
+  title      String
+  message    String?
+  status     String   @default("open")
+  entityType String?
+  entityId   String?
+  createdAt  DateTime @default(now())
+  resolvedAt DateTime?
+  agency     Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client     Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website    Website? @relation(fields: [websiteId], references: [id])
+
+  @@index([clientId, status])
+  @@index([websiteId])
+}
+
+model TaskTemplate {
+  id              String          @id @default(uuid())
+  agencyId        String
+  name            String
+  category        String?
+  defaultPriority String          @default("medium")
+  checklist       Json            @default("[]")
+  createdAt       DateTime        @default(now())
+  agency          Agency          @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  recurringTasks  RecurringTask[]
+
+  @@index([agencyId])
+}
+
+model RecurringTask {
+  id             String       @id @default(uuid())
+  taskTemplateId String
+  clientId       String
+  frequency      String
+  nextRunAt      DateTime?
+  isActive       Boolean      @default(true)
+  taskTemplate   TaskTemplate @relation(fields: [taskTemplateId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([taskTemplateId])
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  clientId    String
+  periodStart DateTime?
+  periodEnd   DateTime?
+  pdfUrl      String?
+  summary     String?
+  status      String   @default("draft")
+  generatedBy String?
+  createdAt   DateTime @default(now())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, createdAt])
+}
+
+model ReportTemplate {
+  id        String   @id @default(uuid())
+  agencyId  String
+  name      String
+  sections  Json
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  scheduledReports ScheduledReport[]
+
+  @@index([agencyId])
+}
+
+model ScheduledReport {
+  id               String          @id @default(uuid())
+  clientId          String
+  reportTemplateId  String?
+  frequency         String          @default("monthly")
+  nextRunAt         DateTime?
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  reportTemplate    ReportTemplate? @relation(fields: [reportTemplateId], references: [id])
+
+  @@index([clientId])
+}
+
+model Integration {
+  id                   String               @id @default(uuid())
+  clientId              String
+  provider              String
+  status                String               @default("not_connected")
+  credentialsEncrypted  String?
+  lastSyncedAt          DateTime?
+  client                Client               @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  syncLogs              IntegrationSyncLog[]
+
+  @@index([clientId])
+}
+
+model IntegrationSyncLog {
+  id               String      @id @default(uuid())
+  integrationId    String
+  provider         String
+  status           String
+  startedAt        DateTime    @default(now())
+  completedAt      DateTime?
+  recordsProcessed Int         @default(0)
+  errorMessage     String?
+  integration      Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId])
+}
+
+model DataSource {
+  id            String   @id @default(uuid())
+  agencyId      String
+  clientId      String?
+  provider      String
+  entityType    String
+  entityId      String
+  sourcePayload Json?
+  createdAt     DateTime @default(now())
+  agency        Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId])
+  @@index([clientId])
+}
+
+model ContentCluster {
+  id             String         @id @default(uuid())
+  agencyId       String
+  clientId       String
+  websiteId      String
+  name           String
+  primaryKeyword String?
+  status         String         @default("planned")
+  createdAt      DateTime       @default(now())
+  client         Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website        Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  briefs         ContentBrief[]
+
+  @@index([agencyId])
+  @@index([clientId])
+  @@index([websiteId])
+}
+
+model ContentBrief {
+  id            String          @id @default(uuid())
+  agencyId      String
+  clientId      String
+  websiteId     String
+  clusterId     String?
+  title         String?
+  targetKeyword String?
+  targetUrl     String?
+  briefBody     String?
+  status        String          @default("draft")
+  generatedBy   String?
+  createdAt     DateTime        @default(now())
+  client        Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website       Website         @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  cluster       ContentCluster? @relation(fields: [clusterId], references: [id])
+  calendarItems ContentCalendarItem[]
+
+  @@index([agencyId])
+  @@index([clientId])
+  @@index([websiteId])
+}
+
+model ContentCalendarItem {
+  id             String       @id @default(uuid())
+  contentBriefId String
+  assignedTo     String?
+  dueDate        DateTime?
+  status         String       @default("planned")
+  createdAt      DateTime     @default(now())
+  contentBrief   ContentBrief @relation(fields: [contentBriefId], references: [id], onDelete: Cascade)
+
+  @@index([contentBriefId])
+}
+
+model AiRequest {
+  id           String   @id @default(uuid())
+  userId       String
+  clientId     String?
+  requestType  String
+  inputPayload Json?
+  outputText   String?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([clientId])
+}
+
+model PermissionOverride {
+  id         String   @id @default(uuid())
+  userId     String
+  permission String
+  effect     String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

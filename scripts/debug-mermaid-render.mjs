@@ -1,0 +1,12 @@
+import puppeteer from "puppeteer";
+import { pathToFileURL } from "node:url";
+const htmlPath = "D:/SLDM/SLDM-seo/output/html/features-use-cases-10-day-timeline-preview.html";
+const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+const page = await browser.newPage();
+page.on("console", (msg) => console.log("console", msg.type(), msg.text()));
+page.on("pageerror", (err) => console.log("pageerror", err.message));
+await page.goto(pathToFileURL(htmlPath).href, { waitUntil: "domcontentloaded" });
+await new Promise((resolve) => setTimeout(resolve, 5000));
+const state = await page.evaluate(() => ({ rendered: window.__MERMAID_RENDERED__ ?? false, diagrams: document.querySelectorAll(".mermaid").length, svgs: document.querySelectorAll(".mermaid svg").length, bodyText: document.body.innerText.slice(0, 500) }));
+console.log(JSON.stringify(state, null, 2));
+await browser.close();

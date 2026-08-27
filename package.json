@@ -1,0 +1,47 @@
+{
+    "name": "seo-agency-platform",
+    "private": true,
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "dev:api": "node --watch server/index.js",
+        "build": "vite build",
+        "preview": "vite preview",
+        "lint": "eslint src server shared tests --ext .js,.jsx",
+        "test": "vitest run",
+        "prisma:generate": "prisma generate",
+        "prisma:validate": "prisma validate"
+    },
+    "dependencies": {
+        "@prisma/client": "^6.12.0",
+        "@vitejs/plugin-react": "latest",
+        "bcryptjs": "^3.0.3",
+        "bullmq": "^5.66.1",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.3",
+        "express": "^5.2.1",
+        "ioredis": "^5.8.2",
+        "jsonwebtoken": "^9.0.3",
+        "lucide-react": "latest",
+        "markdown-it": "^15.0.0",
+        "mermaid": "^11.17.2",
+        "prisma": "^6.12.0",
+        "puppeteer": "^25.9.0",
+        "react": "latest",
+        "react-dom": "latest",
+        "react-router-dom": "latest",
+        "recharts": "latest",
+        "vite": "latest",
+        "zod": "^4.2.1"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.39.1",
+        "eslint": "^9.39.1",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
+        "globals": "^16.5.0",
+        "supertest": "^7.1.4",
+        "vitest": "^4.0.16"
+    }
+}

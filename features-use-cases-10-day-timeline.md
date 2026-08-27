@@ -1,28 +1,91 @@
-# SEO Agency Platform: Features, Use Cases, Diagrams, and 10-Day Timeline
+# SEO Agency Platform: JavaScript-Only Features, Use Cases, and 10-Day Timeline
 
 ## 1. Project Scope
 
-This document defines the first 10-day implementation scope for a company-level SEO agency platform.
+This document defines a 10-day company-level foundation plan for an SEO agency platform built completely in JavaScript.
 
-The 10-day target is not a complete enterprise product. It is a foundation sprint that should produce a working, demo-ready core system with the main product loop:
+The product must use JavaScript across the full stack:
+
+- Frontend: React.js.
+- Backend/API: Node.js with Express.js or NestJS.
+- Database access: Prisma or Sequelize from Node.js.
+- Jobs/workers: Node.js worker process with BullMQ or a similar JS queue.
+- PDF generation: Node.js with Playwright/Puppeteer.
+- Crawling/audits: Node.js crawler services.
+- AI/integrations: Node.js adapter services.
+
+This is not a throwaway demo plan. The 10-day target is a company-level MVP foundation that can grow into production. The first release must prove the full operating loop:
 
 **Client -> Website -> SEO Data -> Insight -> Task -> Report -> Client Portal**
 
-## 2. Core Features
+## 2. Company-Level Architecture
 
-## 2.1 User, Role, and Access Management
+## 2.1 Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React.js, Vite, React Router, React Query |
+| Styling | Tailwind CSS or structured CSS modules |
+| Charts | Recharts |
+| Backend | Node.js API using Express.js or NestJS |
+| Database | PostgreSQL |
+| ORM | Prisma recommended |
+| Auth | JWT access token plus secure refresh token |
+| Jobs | Node.js worker plus BullMQ/Redis |
+| PDF | Playwright or Puppeteer from Node.js |
+| Crawling | Node.js crawler service |
+| AI | Node.js LLM adapter layer |
+| Integrations | Node.js provider adapters for GSC, GA4, PageSpeed, Semrush, Ahrefs later |
+| Testing | Vitest/Jest, React Testing Library, Supertest, Playwright |
+| Deployment | Node.js hosting, PostgreSQL, Redis, object storage |
+
+## 2.2 Architecture Diagram
+
+```mermaid
+flowchart TD
+    React[React.js App]
+    API[Node.js API]
+    Auth[Auth and RBAC]
+    Services[Service Layer]
+    Prisma[Prisma ORM]
+    DB[(PostgreSQL)]
+    Queue[Redis Queue]
+    Worker[Node.js Worker]
+    PDF[PDF Service]
+    Crawl[Crawler Service]
+    Integrations[SEO Integrations]
+    AI[AI Provider Adapter]
+
+    React --> API
+    API --> Auth
+    API --> Services
+    Services --> Prisma
+    Prisma --> DB
+    Services --> Queue
+    Queue --> Worker
+    Worker --> PDF
+    Worker --> Crawl
+    Worker --> Integrations
+    Worker --> AI
+```
+
+## 3. Core Features
+
+## 3.1 User, Role, and Access Management
 
 - Agency workspace.
 - User login and signup.
 - JWT authentication.
+- Refresh-token handling.
 - Role-based access control.
 - Roles: Admin, Manager, Employee, Client.
 - Client assignment rules.
-- Protected frontend routes.
+- Protected React routes.
+- Backend route guards in Node.js.
 - Tenant isolation by agency and client.
-- Client-safe API responses.
+- Client-safe response serializers.
 
-## 2.2 Client Management
+## 3.2 Client Management
 
 - Add, edit, view, and delete clients.
 - Store client company profile.
@@ -32,16 +95,17 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Store retainer data for internal users only.
 - Assign managers and employees to clients.
 - View client activity history.
+- Client health score foundation.
 
-## 2.3 Website Management
+## 3.3 Website Management
 
 - Add, edit, view, and delete websites.
 - Link websites to clients.
-- Store domain, status, SEO score, last audit date, CMS, target locations, and business category.
+- Store domain, status, SEO score, CMS, target locations, business category, preferred locale, and search engine target.
 - Add competitors for each website.
-- Website detail page with SEO tabs.
+- Website workspace with tabs: Overview, Keywords, Audits, Competitors, Backlinks, Content, Tasks, Reports.
 
-## 2.4 SEO Dashboard
+## 3.4 SEO Dashboard
 
 - SEO score overview.
 - Organic traffic trend.
@@ -55,7 +119,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Mock/live data indicator.
 - Client-safe dashboard version.
 
-## 2.5 Keyword Management
+## 3.5 Keyword Management
 
 - Add and edit keywords.
 - Group keywords.
@@ -64,8 +128,9 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Show improved, declined, unchanged, top 3, top 10, and top 100 keywords.
 - CSV import/export.
 - Keyword opportunity score.
+- Future keyword gap against competitors.
 
-## 2.6 Competitor Intelligence
+## 3.6 Competitor Intelligence
 
 - Add competitors per website.
 - Compare client keywords against competitors.
@@ -73,12 +138,14 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Identify shared keywords.
 - Show competitor top pages.
 - Show competitor visibility score.
-- Basic share-of-voice calculation using mock/provider data.
+- Basic share-of-voice calculation.
 
-## 2.7 Technical SEO Audit
+## 3.7 Technical SEO Audit
 
-- Trigger a website audit.
+- Trigger website audit from React UI.
+- Queue audit job in Node.js worker.
 - Store audit runs.
+- Store crawled URL data.
 - Generate issue list.
 - Detect basic technical SEO issues:
   - Broken links.
@@ -99,7 +166,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Mark issues as resolved.
 - Convert audit issue into task.
 
-## 2.8 Task and Workflow Management
+## 3.8 Task and Workflow Management
 
 - Create, edit, view, and delete tasks.
 - Assign tasks to users.
@@ -108,12 +175,13 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Add comments.
 - Add attachment metadata.
 - View task history.
-- Employee "My Tasks" dashboard.
+- Employee My Tasks dashboard.
 - Manager workload view.
+- Activity logs.
 
-## 2.9 Reporting and Client Portal
+## 3.9 Reporting and Client Portal
 
-- Generate monthly SEO report.
+- Generate monthly SEO reports.
 - Report sections:
   - Executive summary.
   - Traffic performance.
@@ -124,12 +192,12 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
   - Content work.
   - Backlink summary.
   - Next-month plan.
-- PDF export.
+- PDF export using Node.js Playwright/Puppeteer.
 - Report approval flow.
 - Client portal report view.
 - Client dashboard with restricted fields.
 
-## 2.10 AI Assistant
+## 3.10 AI Assistant
 
 - Ranking drop explanation.
 - Keyword suggestions.
@@ -139,8 +207,9 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Issue-to-task draft creation.
 - Store AI request history.
 - Apply rate limiting on AI endpoints.
+- Keep AI output internal until approved.
 
-## 2.11 Alerts and Notifications
+## 3.11 Alerts and Notifications
 
 - Task assigned notification.
 - Deadline approaching notification.
@@ -150,10 +219,10 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Report ready alert.
 - Integration sync failure alert.
 
-## 2.12 Integrations Foundation
+## 3.12 Integrations Foundation
 
 - Mock integration provider for development.
-- Adapter interface for real integrations.
+- JavaScript adapter interface for real integrations.
 - Future integration targets:
   - Google Search Console.
   - Google Analytics 4.
@@ -162,7 +231,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
   - Semrush.
   - Ahrefs.
 
-## 3. Primary Actors
+## 4. Primary Actors
 
 | Actor | Description |
 |---|---|
@@ -170,12 +239,13 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 | Manager | SEO manager responsible for assigned clients and reports. |
 | Employee | SEO specialist responsible for assigned execution tasks. |
 | Client | External client with restricted portal access. |
+| Node.js Worker | Background process for crawls, reports, alerts, syncs, and AI jobs. |
 | Integration Provider | External data source such as GSC, GA4, Semrush, Ahrefs, or PageSpeed. |
 | AI Provider | LLM provider used for summaries, briefs, and recommendations. |
 
-## 4. Use Cases
+## 5. Use Cases
 
-## 4.1 Admin Use Cases
+## 5.1 Admin Use Cases
 
 - Sign up and create agency workspace.
 - Invite users.
@@ -189,7 +259,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Review all reports.
 - Configure white-label branding.
 
-## 4.2 Manager Use Cases
+## 5.2 Manager Use Cases
 
 - View assigned clients.
 - View website SEO dashboard.
@@ -203,7 +273,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Approve report for client.
 - Use AI assistant for strategy support.
 
-## 4.3 Employee Use Cases
+## 5.3 Employee Use Cases
 
 - View assigned tasks.
 - Open task detail.
@@ -214,7 +284,7 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Use AI assistant to create briefs or summaries.
 - Mark task complete.
 
-## 4.4 Client Use Cases
+## 5.4 Client Use Cases
 
 - Log in to client portal.
 - View client-safe SEO dashboard.
@@ -223,17 +293,17 @@ The 10-day target is not a complete enterprise product. It is a foundation sprin
 - Download approved reports.
 - View recommendations.
 
-## 4.5 System Use Cases
+## 5.5 System Use Cases
 
 - Sync SEO data from mock/live providers.
 - Generate keyword ranking history.
-- Run technical audit.
+- Run technical audit in Node.js worker.
 - Generate alerts.
-- Generate PDF report.
+- Generate PDF report from Node.js.
 - Store activity logs.
-- Enforce tenant isolation.
+- Enforce tenant isolation in backend route guards and service layer.
 
-## 5. Use Case Diagram: Overall System
+## 6. Use Case Diagram: Overall System
 
 ```mermaid
 flowchart LR
@@ -241,6 +311,7 @@ flowchart LR
     Manager[Manager]
     Employee[Employee]
     Client[Client]
+    Worker[Node.js Worker]
     Integration[Integration Provider]
     AI[AI Provider]
 
@@ -285,12 +356,14 @@ flowchart LR
     Client --> Auth
     Client --> ViewPortal
 
+    Worker --> RunAudit
+    Worker --> GenerateReports
+    Worker --> GenerateAlerts
     Integration --> SyncData
     AI --> UseAI
-    SyncData --> GenerateAlerts
 ```
 
-## 6. Use Case Diagram: SEO Manager Workflow
+## 7. Use Case Diagram: SEO Manager Workflow
 
 ```mermaid
 flowchart TD
@@ -325,12 +398,12 @@ flowchart TD
     Approve --> Portal
 ```
 
-## 7. Use Case Diagram: Client Portal
+## 8. Use Case Diagram: Client Portal
 
 ```mermaid
 flowchart TD
     ClientLogin[Client logs in]
-    Scope[System scopes data to client's account]
+    Scope[Node.js API scopes data to client account]
     Dashboard[View SEO dashboard]
     Progress[View completed work]
     Priorities[View current priorities]
@@ -347,14 +420,15 @@ flowchart TD
     Dashboard --> Recommendations
 ```
 
-## 8. Use Case Diagram: Audit-to-Task Flow
+## 9. Use Case Diagram: Audit-to-Task Flow
 
 ```mermaid
 flowchart TD
     Trigger[User triggers audit]
-    Crawl[System crawls or generates audit data]
-    Detect[System detects SEO issues]
-    Prioritize[System assigns severity]
+    Queue[Node.js API queues audit job]
+    Crawl[Node.js worker crawls or generates audit data]
+    Detect[Worker detects SEO issues]
+    Prioritize[Worker assigns severity]
     Review[Manager reviews issues]
     Convert[Convert issue to task]
     Assign[Assign task to employee]
@@ -362,7 +436,8 @@ flowchart TD
     Resolve[Issue marked resolved]
     Report[Completed work appears in report]
 
-    Trigger --> Crawl
+    Trigger --> Queue
+    Queue --> Crawl
     Crawl --> Detect
     Detect --> Prioritize
     Prioritize --> Review
@@ -373,12 +448,13 @@ flowchart TD
     Resolve --> Report
 ```
 
-## 9. Use Case Diagram: AI Assistant
+## 10. Use Case Diagram: AI Assistant
 
 ```mermaid
 flowchart LR
     User[Admin / Manager / Employee]
     Context[Client SEO Context]
+    API[Node.js AI Route]
     Prompt[AI Request]
     LLM[LLM Provider]
     Output[AI Output]
@@ -386,8 +462,9 @@ flowchart LR
     Task[Attach to Task]
     Report[Use in Report Draft]
 
-    User --> Prompt
-    Context --> Prompt
+    User --> API
+    Context --> API
+    API --> Prompt
     Prompt --> LLM
     LLM --> Output
     Output --> Store
@@ -395,195 +472,200 @@ flowchart LR
     Output --> Report
 ```
 
-## 10. 10-Day Schedule and Timeline
+## 11. 10-Day Company-Level JavaScript Timeline
 
-## Day 1: Product Finalization and Database Planning
+## Day 1: JavaScript Project Foundation
 
-**Focus:** Confirm the company-level architecture and prepare implementation.
+**Focus:** Establish the full-stack JavaScript architecture.
 
-- Finalize MVP boundaries.
-- Finalize user roles and permissions.
-- Review existing schema.
-- Add missing database tables for websites, competitors, rank tracking, audits, alerts, reports, and AI history.
-- Define tenant-isolation rules.
-- Define API route groups.
+- Set up React.js app with Vite.
+- Set up Node.js backend API project.
+- Set up shared JavaScript config and environment handling.
+- Set up PostgreSQL connection through Prisma.
+- Define Prisma schema for agencies, users, roles, clients, websites, competitors, keywords, audits, tasks, reports, alerts, integrations, and AI requests.
+- Define RBAC permissions in JavaScript.
+- Define tenant scoping helpers.
+- Define client-safe serializers.
+- Add lint/build/test scripts.
 
-**Output:** Updated technical plan, schema changes, and permission matrix.
+**Output:** Full-stack JavaScript foundation ready for feature implementation.
 
-## Day 2: Website and Competitor Management
+## Day 2: Auth, Roles, and Tenant Security
+
+**Focus:** Build secure access control first.
+
+- Implement signup and login in Node.js.
+- Hash passwords with a Node.js library.
+- Issue JWT access tokens.
+- Add refresh-token flow.
+- Add Admin, Manager, Employee, and Client roles.
+- Add backend route guards.
+- Add protected React routes.
+- Add tenant-isolation tests.
+
+**Output:** Users can authenticate and access only allowed data.
+
+## Day 3: Client and Team Management
+
+**Focus:** Build agency operating foundation.
+
+- Build client CRUD API.
+- Build client list/detail UI.
+- Build contacts and internal notes.
+- Add team user management.
+- Assign managers and employees to clients.
+- Add activity log entries.
+- Hide retainer/internal fields from client role.
+
+**Output:** Agency users can manage clients and team assignments safely.
+
+## Day 4: Website and Competitor Management
 
 **Focus:** Make websites the center of SEO work.
 
-- Build website CRUD backend.
-- Build website CRUD frontend.
-- Add website detail page.
-- Add competitor model and endpoints.
-- Add competitor UI.
-- Add seed data.
+- Build website CRUD API and UI.
+- Store CMS, business category, locations, locale, and search engines.
+- Build website workspace tabs.
+- Add competitor CRUD API and UI.
+- Add seed/demo data through JS seed script.
 
-**Output:** Users can manage client websites and competitors.
+**Output:** Each client can have websites, competitors, and project-level SEO settings.
 
-## Day 3: Keyword Management and Ranking History
+## Day 5: Keyword Tracking and Ranking History
 
-**Focus:** Build keyword tracking foundation.
+**Focus:** Build keyword intelligence foundation.
 
-- Build keyword CRUD.
+- Build keyword CRUD API and UI.
 - Build keyword groups.
-- Add ranking history table.
-- Add mock ranking generator.
-- Add keyword table UI.
-- Add ranking trend chart.
-- Add keyword filters.
+- Add ranking history model.
+- Add mock ranking generator in Node.js.
+- Add keyword table filters.
+- Add ranking trend charts.
+- Add import/export foundation.
 
 **Output:** Users can track keywords and ranking movement.
 
-## Day 4: SEO Dashboard
+## Day 6: SEO Dashboard and Share of Voice
 
-**Focus:** Build the core performance dashboard.
+**Focus:** Build the main performance dashboard.
 
-- Build SEO summary endpoint.
-- Build traffic trend endpoint.
-- Add KPI cards.
-- Add traffic chart.
+- Build SEO summary API.
+- Add traffic trend API.
+- Add KPI cards in React.
 - Add ranking distribution chart.
-- Add keyword movement summary.
-- Add mock/live data labels.
+- Add keyword movement chart.
+- Add top pages section.
+- Add competitor visibility/share-of-voice calculation.
+- Add mock/live labels.
 - Add client-safe dashboard response.
 
-**Output:** Internal users and clients can view SEO performance.
+**Output:** Internal users and clients can view scoped SEO performance.
 
-## Day 5: Technical SEO Audit V1
+## Day 7: Technical Audit Engine V1
 
-**Focus:** Build basic audit workflow.
+**Focus:** Build Node.js crawl/audit foundation.
 
 - Add audit run model.
-- Add audit issue model.
-- Add audit trigger endpoint.
-- Generate mock/rule-based technical issues.
-- Add issue severity.
-- Build audit list UI.
-- Build issue list UI.
+- Add crawled URL model.
+- Add technical issue model.
+- Create Node.js audit worker.
+- Generate rule-based technical issues.
+- Add issue severity scoring.
+- Build audit UI.
 - Add mark-resolved action.
-
-**Output:** Users can run audits and review technical issues.
-
-## Day 6: Task Management
-
-**Focus:** Connect SEO findings to work execution.
-
-- Build task CRUD.
-- Add task comments.
-- Add attachment metadata.
-- Add assignment flow.
-- Add task status updates.
-- Add task filters.
-- Add employee "My Tasks" view.
 - Add issue-to-task conversion.
 
-**Output:** SEO issues and opportunities can become assigned work.
+**Output:** Users can run audits, inspect issues, and convert issues into work.
 
-## Day 7: Activity Logs, Alerts, and Notifications
+## Day 8: Task Workflow and Alerts
 
-**Focus:** Add operational visibility.
+**Focus:** Connect SEO insights to execution.
 
+- Build task CRUD API and UI.
+- Add comments and attachment metadata.
+- Add assignment flow.
+- Add status transitions.
+- Add My Tasks view.
+- Add manager workload view.
+- Add notifications and alerts.
 - Add activity logging.
-- Add notification model.
-- Add task assigned notification.
-- Add deadline notification.
-- Add critical audit issue alert.
-- Add ranking drop alert using mock ranking data.
-- Add notification bell UI.
 
-**Output:** Users can see important changes and pending actions.
+**Output:** SEO findings can become assigned and trackable work.
 
-## Day 8: Reporting and PDF Export
+## Day 9: Reports and Client Portal
 
-**Focus:** Create manager-reviewed client reports.
+**Focus:** Package work into client-facing outcomes.
 
-- Add report model.
-- Add report generation endpoint.
-- Aggregate SEO dashboard, keywords, audit issues, tasks, and recommendations.
+- Build report model and API.
+- Aggregate traffic, keyword, audit, task, and recommendation data.
 - Build report preview UI.
-- Add report approval status.
-- Add PDF export.
-
-**Output:** Managers can generate and approve monthly SEO reports.
-
-## Day 9: Client Portal and AI Assistant
-
-**Focus:** Add client-facing access and AI support.
-
+- Generate PDF with Node.js Playwright/Puppeteer.
+- Add approval workflow.
 - Build client portal dashboard.
 - Build approved reports page.
-- Ensure client-safe API responses.
-- Add AI provider abstraction.
-- Add ranking explanation prompt.
-- Add content brief prompt.
-- Add performance summary prompt.
+
+**Output:** Clients can view approved progress and download reports.
+
+## Day 10: AI, QA, Hardening, and Deployment Prep
+
+**Focus:** Make the MVP foundation credible for company use.
+
+- Add Node.js AI provider abstraction.
+- Add prompts for ranking explanations, content briefs, audit summaries, and report summaries.
 - Store AI request history.
-
-**Output:** Clients can view approved progress, and internal users can use AI support.
-
-## Day 10: QA, Security Review, and Demo Packaging
-
-**Focus:** Stabilize the sprint output.
-
-- Add tenant-isolation tests.
-- Add RBAC tests.
-- Test client portal data restrictions.
-- Test critical user flows.
-- Fix UI loading, empty, and error states.
-- Prepare demo seed data.
+- Add rate limiting.
+- Run frontend tests.
+- Run backend API tests.
+- Run tenant-isolation tests.
+- Run lint/build checks.
 - Prepare deployment checklist.
-- Document known limitations and next-phase work.
+- Fix critical security and UX issues.
 
-**Output:** Demo-ready foundation with tested core workflow.
+**Output:** Company-level JavaScript MVP foundation ready for staging.
 
-## 11. Timeline Diagram
+## 12. Timeline Diagram
 
 ```mermaid
 gantt
-    title 10-Day SEO Agency Platform Foundation Sprint
+    title 10-Day JavaScript SEO Agency Platform Sprint
     dateFormat  YYYY-MM-DD
     axisFormat  %d %b
 
-    section Planning
-    Product scope and schema planning      :d1, 2026-08-27, 1d
+    section Foundation
+    Full-stack JavaScript foundation       :d1, 2026-08-27, 1d
+    Auth roles and tenant security         :d2, after d1, 1d
 
-    section Core Entities
-    Website and competitor management      :d2, after d1, 1d
-    Keyword and ranking foundation         :d3, after d2, 1d
+    section Core Operations
+    Client and team management             :d3, after d2, 1d
+    Website and competitor management      :d4, after d3, 1d
 
     section SEO Intelligence
-    SEO dashboard                          :d4, after d3, 1d
-    Technical audit V1                     :d5, after d4, 1d
+    Keyword tracking and rankings          :d5, after d4, 1d
+    SEO dashboard and share of voice       :d6, after d5, 1d
+    Technical audit engine V1              :d7, after d6, 1d
 
-    section Workflow
-    Task management                        :d6, after d5, 1d
-    Activity logs and alerts               :d7, after d6, 1d
-
-    section Client Delivery
-    Reporting and PDF export               :d8, after d7, 1d
-    Client portal and AI assistant         :d9, after d8, 1d
+    section Delivery
+    Task workflow and alerts               :d8, after d7, 1d
+    Reports and client portal              :d9, after d8, 1d
 
     section Hardening
-    QA, security review, demo packaging    :d10, after d9, 1d
+    AI QA hardening and deployment prep    :d10, after d9, 1d
 ```
 
-## 12. Dependency Timeline
+## 13. Dependency Timeline
 
 ```mermaid
 flowchart LR
-    D1[Day 1: Schema and Permissions]
-    D2[Day 2: Websites and Competitors]
-    D3[Day 3: Keywords and Rankings]
-    D4[Day 4: SEO Dashboard]
-    D5[Day 5: Audits]
-    D6[Day 6: Tasks]
-    D7[Day 7: Alerts]
-    D8[Day 8: Reports]
-    D9[Day 9: Client Portal and AI]
-    D10[Day 10: QA and Demo]
+    D1[Day 1: JS Foundation]
+    D2[Day 2: Auth and Security]
+    D3[Day 3: Clients and Team]
+    D4[Day 4: Websites and Competitors]
+    D5[Day 5: Keywords and Rankings]
+    D6[Day 6: SEO Dashboard]
+    D7[Day 7: Technical Audits]
+    D8[Day 8: Tasks and Alerts]
+    D9[Day 9: Reports and Portal]
+    D10[Day 10: AI QA Deployment]
 
     D1 --> D2
     D2 --> D3
@@ -591,38 +673,43 @@ flowchart LR
     D4 --> D5
     D5 --> D6
     D6 --> D7
-    D4 --> D8
-    D6 --> D8
+    D7 --> D8
+    D6 --> D9
     D8 --> D9
-    D7 --> D9
     D9 --> D10
 ```
 
-## 13. Expected End-of-Sprint Demo
+## 14. Expected End-of-Sprint Flow
 
-At the end of 10 days, the demo should show:
+At the end of 10 days, the product should support this company-level MVP flow:
 
-1. Admin logs in.
-2. Admin opens a client.
-3. Admin adds a website and competitors.
-4. Manager opens the website SEO dashboard.
-5. Manager reviews keywords and ranking movement.
-6. Manager runs a technical audit.
-7. Manager converts an issue into a task.
-8. Employee opens the task, comments, and marks it complete.
-9. Manager generates a monthly report.
-10. Client logs in and views the approved report and client-safe dashboard.
+1. Admin creates agency workspace.
+2. Admin invites team members.
+3. Admin or Manager creates a client.
+4. Manager adds websites and competitors.
+5. Manager tracks keywords and ranking history.
+6. Manager reviews SEO dashboard.
+7. Manager runs a technical audit.
+8. Manager converts an issue into a task.
+9. Employee completes the assigned task.
+10. Manager generates and approves a report.
+11. Client logs in and views the approved report and client-safe dashboard.
 
-## 14. Out of Scope for the First 10 Days
+## 15. Out of Scope for the First 10 Days
 
-- Full live Semrush/Ahrefs integration.
-- Full production crawler at Screaming Frog scale.
 - Billing/subscription system.
-- CRM/sales pipeline.
-- Advanced white-label custom domains.
+- Full CRM/sales pipeline.
+- Enterprise SSO.
+- Custom white-label domains.
+- Production-scale backlink index.
+- Production-scale crawler cluster.
+- Advanced AI visibility tracking.
 - Fully automated AI agents.
-- Real-time rank tracking at scale.
-- Large-scale backlink index.
 
-These should be planned after the foundation sprint.
+These are not rejected features. They are later-phase work after the JavaScript MVP foundation is stable.
 
+## 16. Key Constraint
+
+Because this project must be fully JavaScript, no Python, FastAPI, Django, Flask, or Python-based PDF tooling should be used.
+
+All implementation should use JavaScript or Node.js equivalents.

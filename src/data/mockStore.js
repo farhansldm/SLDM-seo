@@ -1,0 +1,18 @@
+﻿export const mockStore = {
+  agencies: [],
+  roles: ["admin", "manager", "employee", "client"],
+  users: [],
+  clients: [],
+  websites: [],
+  competitors: [],
+  keywords: [],
+  keywordRankings: [],
+  crawlRuns: [],
+  technicalChecks: [],
+  alerts: [],
+  reports: [],
+  reportTemplates: [],
+  integrationSyncLogs: [],
+  contentBriefs: [],
+  aiRequests: [],
+};
