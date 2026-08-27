@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SEO Agency Platform Plan</title>
+  <style>
+    @page { size: A4; margin: 18mm 15mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #172026; background: #ffffff; font-family: Inter, Segoe UI, Arial, sans-serif; font-size: 11px; line-height: 1.48; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 18px; padding: 26px 30px; color: #ffffff; background: #172026; border-radius: 10px; font-size: 28px; line-height: 1.15; page-break-after: avoid; }
+    h2 { margin: 28px 0 10px; padding-bottom: 7px; border-bottom: 1px solid #d8e1e8; color: #172026; font-size: 18px; line-height: 1.25; page-break-after: avoid; }
+    h3 { margin: 18px 0 8px; color: #25313a; font-size: 14px; line-height: 1.3; page-break-after: avoid; }
+    p { margin: 7px 0; }
+    ul, ol { margin: 7px 0 10px 22px; padding: 0; }
+    li { margin: 3px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 9px; page-break-inside: avoid; }
+    th, td { border: 1px solid #d8e1e8; padding: 6px 7px; text-align: left; vertical-align: top; }
+    th { background: #eef4f8; font-weight: 700; }
+    tr:nth-child(even) td { background: #fafcfd; }
+    code { background: #eef4f8; border-radius: 4px; padding: 1px 4px; font-family: Consolas, Courier New, monospace; font-size: 0.92em; }
+    pre:not(.mermaid) { white-space: pre-wrap; background: #f5f7fa; border: 1px solid #d8e1e8; border-radius: 8px; padding: 12px; overflow: hidden; page-break-inside: avoid; }
+    .mermaid { margin: 14px 0 20px; padding: 14px; border: 1px solid #d8e1e8; border-radius: 8px; background: #fbfdff; text-align: center; page-break-inside: avoid; white-space: normal; }
+    .mermaid svg { max-width: 100%; height: auto !important; }
+  </style>
+</head>
+<body>
+  <main><h1>SEO Agency Platform: JavaScript-Only Features, Use Cases, and 10-Day Timeline</h1>
+<h2>1. Project Scope</h2>
+<p>This document defines a 10-day company-level foundation plan for an SEO agency platform built completely in JavaScript.</p>
+<p>The product must use JavaScript across the full stack:</p>
+<ul>
+<li>Frontend: React.js.</li>
+<li>Backend/API: Node.js with Express.js or NestJS.</li>
+<li>Database access: Prisma or Sequelize from Node.js.</li>
+<li>Jobs/workers: Node.js worker process with BullMQ or a similar JS queue.</li>
+<li>PDF generation: Node.js with Playwright/Puppeteer.</li>
+<li>Crawling/audits: Node.js crawler services.</li>
+<li>AI/integrations: Node.js adapter services.</li>
+</ul>
+<p>This is not a throwaway demo plan. The 10-day target is a company-level MVP foundation that can grow into production. The first release must prove the full operating loop:</p>
+<p><strong>Client -&gt; Website -&gt; SEO Data -&gt; Insight -&gt; Task -&gt; Report -&gt; Client Portal</strong></p>
+<h2>2. Company-Level Architecture</h2>
+<h2>2.1 Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend</td>
+<td>React.js, Vite, React Router, React Query</td>
+</tr>
+<tr>
+<td>Styling</td>
+<td>Tailwind CSS or structured CSS modules</td>
+</tr>
+<tr>
+<td>Charts</td>
+<td>Recharts</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>Node.js API using Express.js or NestJS</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>PostgreSQL</td>
+</tr>
+<tr>
+<td>ORM</td>
+<td>Prisma recommended</td>
+</tr>
+<tr>
+<td>Auth</td>
+<td>JWT access token plus secure refresh token</td>
+</tr>
+<tr>
+<td>Jobs</td>
+<td>Node.js worker plus BullMQ/Redis</td>
+</tr>
+<tr>
+<td>PDF</td>
+<td>Playwright or Puppeteer from Node.js</td>
+</tr>
+<tr>
+<td>Crawling</td>
+<td>Node.js crawler service</td>
+</tr>
+<tr>
+<td>AI</td>
+<td>Node.js LLM adapter layer</td>
+</tr>
+<tr>
+<td>Integrations</td>
+<td>Node.js provider adapters for GSC, GA4, PageSpeed, Semrush, Ahrefs later</td>
+</tr>
+<tr>
+<td>Testing</td>
+<td>Vitest/Jest, React Testing Library, Supertest, Playwright</td>
+</tr>
+<tr>
+<td>Deployment</td>
+<td>Node.js hosting, PostgreSQL, Redis, object storage</td>
+</tr>
+</tbody>
+</table>
+<h2>2.2 Architecture Diagram</h2>
+<pre class="mermaid">flowchart TD
+    React[React.js App]
+    API[Node.js API]
+    Auth[Auth and RBAC]
+    Services[Service Layer]
+    Prisma[Prisma ORM]
+    DB[(PostgreSQL)]
+    Queue[Redis Queue]
+    Worker[Node.js Worker]
+    PDF[PDF Service]
+    Crawl[Crawler Service]
+    Integrations[SEO Integrations]
+    AI[AI Provider Adapter]
+
+    React --&gt; API
+    API --&gt; Auth
+    API --&gt; Services
+    Services --&gt; Prisma
+    Prisma --&gt; DB
+    Services --&gt; Queue
+    Queue --&gt; Worker
+    Worker --&gt; PDF
+    Worker --&gt; Crawl
+    Worker --&gt; Integrations
+    Worker --&gt; AI
+</pre><h2>3. Core Features</h2>
+<h2>3.1 User, Role, and Access Management</h2>
+<ul>
+<li>Agency workspace.</li>
+<li>User login and signup.</li>
+<li>JWT authentication.</li>
+<li>Refresh-token handling.</li>
+<li>Role-based access control.</li>
+<li>Roles: Admin, Manager, Employee, Client.</li>
+<li>Client assignment rules.</li>
+<li>Protected React routes.</li>
+<li>Backend route guards in Node.js.</li>
+<li>Tenant isolation by agency and client.</li>
+<li>Client-safe response serializers.</li>
+</ul>
+<h2>3.2 Client Management</h2>
+<ul>
+<li>Add, edit, view, and delete clients.</li>
+<li>Store client company profile.</li>
+<li>Store client contacts.</li>
+<li>Add internal notes.</li>
+<li>Track client status: active, paused, churned.</li>
+<li>Store retainer data for internal users only.</li>
+<li>Assign managers and employees to clients.</li>
+<li>View client activity history.</li>
+<li>Client health score foundation.</li>
+</ul>
+<h2>3.3 Website Management</h2>
+<ul>
+<li>Add, edit, view, and delete websites.</li>
+<li>Link websites to clients.</li>
+<li>Store domain, status, SEO score, CMS, target locations, business category, preferred locale, and search engine target.</li>
+<li>Add competitors for each website.</li>
+<li>Website workspace with tabs: Overview, Keywords, Audits, Competitors, Backlinks, Content, Tasks, Reports.</li>
+</ul>
+<h2>3.4 SEO Dashboard</h2>
+<ul>
+<li>SEO score overview.</li>
+<li>Organic traffic trend.</li>
+<li>Clicks, impressions, CTR, and average position.</li>
+<li>Keyword movement summary.</li>
+<li>Top ranking keywords.</li>
+<li>Ranking distribution.</li>
+<li>Audit issue summary.</li>
+<li>Backlink summary.</li>
+<li>Task summary.</li>
+<li>Mock/live data indicator.</li>
+<li>Client-safe dashboard version.</li>
+</ul>
+<h2>3.5 Keyword Research and Keyword Management</h2>
+<ul>
+<li>Discover keywords by seed term, URL, competitor domain, service category, and location.</li>
+<li>Generate keyword ideas grouped by questions, comparisons, prepositions, related terms, and long-tail opportunities.</li>
+<li>Store search volume, difficulty, CPC, intent, target page, device, location, language, and SERP feature presence.</li>
+<li>Add and edit tracked keywords.</li>
+<li>Group keywords by campaign, topic cluster, funnel stage, location, or client priority.</li>
+<li>Track ranking history over time.</li>
+<li>Show improved, declined, unchanged, top 3, top 10, and top 100 keywords.</li>
+<li>Identify keyword gaps against competitors.</li>
+<li>Identify keyword cannibalization where multiple client pages compete for the same query.</li>
+<li>Calculate keyword opportunity score using volume, difficulty, ranking distance, business value, and current page strength.</li>
+<li>Create content briefs or SEO tasks directly from keyword opportunities.</li>
+<li>CSV import/export.</li>
+</ul>
+<h2>3.6 Competitor Intelligence</h2>
+<ul>
+<li>Add competitors per website.</li>
+<li>Compare client keywords against competitors.</li>
+<li>Identify missing keywords.</li>
+<li>Identify shared keywords.</li>
+<li>Show competitor top pages.</li>
+<li>Show competitor visibility score.</li>
+<li>Track competitor content velocity.</li>
+<li>Track competitor backlink sources.</li>
+<li>Identify competitor pages that should be outranked or used as content references.</li>
+<li>Basic share-of-voice calculation.</li>
+</ul>
+<h2>3.7 Backlink Research and Link Building</h2>
+<ul>
+<li>Store backlink inventory for each website.</li>
+<li>Track referring domains, source URLs, target URLs, anchor text, dofollow/nofollow status, and authority metrics.</li>
+<li>Identify new and lost backlinks.</li>
+<li>Identify broken backlinks pointing to missing client pages.</li>
+<li>Identify toxic or suspicious backlinks for review.</li>
+<li>Compare backlinks against competitors.</li>
+<li>Run backlink gap/link intersect analysis to find domains linking to competitors but not the client.</li>
+<li>Create link-building prospects from competitor backlink sources.</li>
+<li>Track outreach status without turning the product into a full CRM.</li>
+<li>Convert backlink opportunities or broken backlink issues into tasks.</li>
+<li>Include backlink wins/losses and link-building progress in reports.</li>
+</ul>
+<h2>3.8 Technical SEO Audit</h2>
+<ul>
+<li>Trigger website audit from React UI.</li>
+<li>Queue audit job in Node.js worker.</li>
+<li>Store audit runs.</li>
+<li>Store crawled URL data.</li>
+<li>Generate issue list.</li>
+<li>Detect basic technical SEO issues:
+<ul>
+<li>Broken links.</li>
+<li>Missing title.</li>
+<li>Duplicate title.</li>
+<li>Missing meta description.</li>
+<li>Duplicate meta description.</li>
+<li>Missing H1.</li>
+<li>Multiple H1 tags.</li>
+<li>Image alt text issues.</li>
+<li>Noindex pages.</li>
+<li>Redirect chains.</li>
+<li>Canonical issues.</li>
+<li>Sitemap gaps.</li>
+<li>Robots.txt blocks.</li>
+<li>Slow pages.</li>
+</ul>
+</li>
+<li>Assign severity: critical, high, medium, low.</li>
+<li>Mark issues as resolved.</li>
+<li>Convert audit issue into task.</li>
+</ul>
+<h2>3.9 Task and Workflow Management</h2>
+<ul>
+<li>Create, edit, view, and delete tasks.</li>
+<li>Assign tasks to users.</li>
+<li>Link tasks to clients, websites, keywords, audit issues, or reports.</li>
+<li>Set category, priority, status, and deadline.</li>
+<li>Add comments.</li>
+<li>Add attachment metadata.</li>
+<li>View task history.</li>
+<li>Employee My Tasks dashboard.</li>
+<li>Manager workload view.</li>
+<li>Activity logs.</li>
+</ul>
+<h2>3.10 Reporting and Client Portal</h2>
+<ul>
+<li>Generate monthly SEO reports.</li>
+<li>Report sections:
+<ul>
+<li>Executive summary.</li>
+<li>Traffic performance.</li>
+<li>Keyword wins and losses.</li>
+<li>Technical issues fixed.</li>
+<li>Open technical issues.</li>
+<li>Completed tasks.</li>
+<li>Content work.</li>
+<li>Backlink summary.</li>
+<li>Next-month plan.</li>
+</ul>
+</li>
+<li>PDF export using Node.js Playwright/Puppeteer.</li>
+<li>Report approval flow.</li>
+<li>Client portal report view.</li>
+<li>Client dashboard with restricted fields.</li>
+</ul>
+<h2>3.11 AI Assistant</h2>
+<ul>
+<li>Ranking drop explanation.</li>
+<li>Keyword suggestions.</li>
+<li>Content brief generation.</li>
+<li>Performance summary.</li>
+<li>Audit issue summary.</li>
+<li>Issue-to-task draft creation.</li>
+<li>Store AI request history.</li>
+<li>Apply rate limiting on AI endpoints.</li>
+<li>Keep AI output internal until approved.</li>
+</ul>
+<h2>3.12 Alerts and Notifications</h2>
+<ul>
+<li>Task assigned notification.</li>
+<li>Deadline approaching notification.</li>
+<li>Ranking drop alert.</li>
+<li>Traffic drop alert.</li>
+<li>Critical audit issue alert.</li>
+<li>Report ready alert.</li>
+<li>Integration sync failure alert.</li>
+</ul>
+<h2>3.13 Integrations Foundation</h2>
+<ul>
+<li>Mock integration provider for development.</li>
+<li>JavaScript adapter interface for real integrations.</li>
+<li>Future integration targets:
+<ul>
+<li>Google Search Console.</li>
+<li>Google Analytics 4.</li>
+<li>PageSpeed Insights.</li>
+<li>Google Business Profile.</li>
+<li>Semrush.</li>
+<li>Ahrefs.</li>
+</ul>
+</li>
+</ul>
+<h2>3.14 AI Platform Research and Optimization</h2>
+<p>This platform should not only use AI to write text. It should use AI platforms as an SEO research and optimization layer.</p>
+<p>The AI workflow works like this:</p>
+<ol>
+<li>Collect structured SEO data from the platform: keywords, rankings, pages, audits, competitors, backlinks, traffic, tasks, and reports.</li>
+<li>Normalize that data in the Node.js service layer so the AI receives clean context instead of raw database dumps.</li>
+<li>Send scoped prompts to the AI provider through a JavaScript adapter.</li>
+<li>Generate research outputs: keyword opportunities, topic clusters, content gaps, backlink prospects, competitor summaries, and technical issue explanations.</li>
+<li>Generate optimization outputs: title/meta suggestions, content brief recommendations, internal link suggestions, schema recommendations, page refresh guidance, and report summaries.</li>
+<li>Store every AI request and result with user, client, input context, output, provider, and timestamp.</li>
+<li>Keep AI output internal by default. A manager must approve anything before it appears in a client report or portal.</li>
+</ol>
+<p>AI platform features:</p>
+<ul>
+<li>Keyword research expansion from seed keywords, competitor domains, and page URLs.</li>
+<li>Content gap analysis using competitor pages and missing keyword clusters.</li>
+<li>Backlink prospect prioritization based on competitor links and topical relevance.</li>
+<li>Technical audit explanation in plain language.</li>
+<li>On-page optimization recommendations.</li>
+<li>Content brief generation.</li>
+<li>Existing content refresh recommendations.</li>
+<li>Internal linking recommendations.</li>
+<li>Report executive summaries.</li>
+<li>AI search/AEO readiness checks for future platforms like AI Overviews, ChatGPT, Gemini, and Perplexity-style answer engines.</li>
+</ul>
+<h2>4. Primary Actors</h2>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Admin</td>
+<td>Agency owner or administrator with full access.</td>
+</tr>
+<tr>
+<td>Manager</td>
+<td>SEO manager responsible for assigned clients and reports.</td>
+</tr>
+<tr>
+<td>Employee</td>
+<td>SEO specialist responsible for assigned execution tasks.</td>
+</tr>
+<tr>
+<td>Client</td>
+<td>External client with restricted portal access.</td>
+</tr>
+<tr>
+<td>Node.js Worker</td>
+<td>Background process for crawls, reports, alerts, syncs, and AI jobs.</td>
+</tr>
+<tr>
+<td>Integration Provider</td>
+<td>External data source such as GSC, GA4, Semrush, Ahrefs, or PageSpeed.</td>
+</tr>
+<tr>
+<td>AI Provider</td>
+<td>LLM provider used for summaries, briefs, and recommendations.</td>
+</tr>
+</tbody>
+</table>
+<h2>5. Use Cases</h2>
+<h2>5.1 Admin Use Cases</h2>
+<ul>
+<li>Sign up and create agency workspace.</li>
+<li>Invite users.</li>
+<li>Assign roles.</li>
+<li>Add clients.</li>
+<li>Add client contacts.</li>
+<li>Add websites.</li>
+<li>Assign team members to clients.</li>
+<li>View all agency KPIs.</li>
+<li>Manage integrations.</li>
+<li>Review all reports.</li>
+<li>Configure white-label branding.</li>
+</ul>
+<h2>5.2 Manager Use Cases</h2>
+<ul>
+<li>View assigned clients.</li>
+<li>View website SEO dashboard.</li>
+<li>Add or update keywords.</li>
+<li>Review ranking movement.</li>
+<li>Run website audit.</li>
+<li>Convert audit issue into task.</li>
+<li>Assign tasks to employees.</li>
+<li>Review team workload.</li>
+<li>Generate monthly report.</li>
+<li>Approve report for client.</li>
+<li>Use AI assistant for strategy support.</li>
+</ul>
+<h2>5.3 Employee Use Cases</h2>
+<ul>
+<li>View assigned tasks.</li>
+<li>Open task detail.</li>
+<li>Review client and website context.</li>
+<li>Add task comments.</li>
+<li>Upload task attachment metadata.</li>
+<li>Update task status.</li>
+<li>Use AI assistant to create briefs or summaries.</li>
+<li>Mark task complete.</li>
+</ul>
+<h2>5.4 Client Use Cases</h2>
+<ul>
+<li>Log in to client portal.</li>
+<li>View client-safe SEO dashboard.</li>
+<li>View completed work.</li>
+<li>View current priorities.</li>
+<li>Download approved reports.</li>
+<li>View recommendations.</li>
+</ul>
+<h2>5.5 System Use Cases</h2>
+<ul>
+<li>Sync SEO data from mock/live providers.</li>
+<li>Generate keyword ranking history.</li>
+<li>Run technical audit in Node.js worker.</li>
+<li>Generate alerts.</li>
+<li>Generate PDF report from Node.js.</li>
+<li>Store activity logs.</li>
+<li>Enforce tenant isolation in backend route guards and service layer.</li>
+</ul>
+<h2>6. Use Case Diagram: Overall System</h2>
+<pre class="mermaid">flowchart LR
+    Admin[Admin]
+    Manager[Manager]
+    Employee[Employee]
+    Client[Client]
+    Worker[Node.js Worker]
+    Integration[Integration Provider]
+    AI[AI Provider]
+
+    Auth((Authenticate))
+    ManageTeam((Manage Team))
+    ManageClients((Manage Clients))
+    ManageWebsites((Manage Websites))
+    ViewDashboard((View SEO Dashboard))
+    ManageKeywords((Keyword Research))
+    BacklinkResearch((Backlink Research))
+    LinkBuilding((Link Building))
+    RunAudit((Run Technical Audit))
+    ManageTasks((Manage Tasks))
+    GenerateReports((Generate Reports))
+    ViewPortal((View Client Portal))
+    UseAI((Use AI Assistant))
+    SyncData((Sync SEO Data))
+    GenerateAlerts((Generate Alerts))
+
+    Admin --&gt; Auth
+    Admin --&gt; ManageTeam
+    Admin --&gt; ManageClients
+    Admin --&gt; ManageWebsites
+    Admin --&gt; ViewDashboard
+    Admin --&gt; GenerateReports
+    Admin --&gt; SyncData
+
+    Manager --&gt; Auth
+    Manager --&gt; ManageClients
+    Manager --&gt; ManageWebsites
+    Manager --&gt; ViewDashboard
+    Manager --&gt; ManageKeywords
+    Manager --&gt; BacklinkResearch
+    Manager --&gt; LinkBuilding
+    Manager --&gt; RunAudit
+    Manager --&gt; ManageTasks
+    Manager --&gt; GenerateReports
+    Manager --&gt; UseAI
+
+    Employee --&gt; Auth
+    Employee --&gt; ViewDashboard
+    Employee --&gt; BacklinkResearch
+    Employee --&gt; ManageTasks
+    Employee --&gt; RunAudit
+    Employee --&gt; UseAI
+
+    Client --&gt; Auth
+    Client --&gt; ViewPortal
+
+    Worker --&gt; RunAudit
+    Worker --&gt; GenerateReports
+    Worker --&gt; GenerateAlerts
+    Integration --&gt; SyncData
+    AI --&gt; UseAI
+</pre><h2>7. Use Case Diagram: SEO Manager Workflow</h2>
+<pre class="mermaid">flowchart TD
+    Login[Manager logs in]
+    Clients[View assigned clients]
+    Website[Open website workspace]
+    Dashboard[Review SEO dashboard]
+    Keywords[Analyze keyword movement]
+    Competitors[Review competitor gaps]
+    Audit[Run technical audit]
+    Issues[Review audit issues]
+    Task[Create or assign task]
+    AI[Use AI assistant]
+    Report[Generate monthly report]
+    Approve[Approve report]
+    Portal[Publish to client portal]
+
+    Login --&gt; Clients
+    Clients --&gt; Website
+    Website --&gt; Dashboard
+    Dashboard --&gt; Keywords
+    Dashboard --&gt; Competitors
+    Dashboard --&gt; Audit
+    Audit --&gt; Issues
+    Issues --&gt; Task
+    Keywords --&gt; Task
+    Competitors --&gt; Task
+    Task --&gt; AI
+    Dashboard --&gt; Report
+    Task --&gt; Report
+    Report --&gt; Approve
+    Approve --&gt; Portal
+</pre><h2>8. Use Case Diagram: Client Portal</h2>
+<pre class="mermaid">flowchart TD
+    ClientLogin[Client logs in]
+    Scope[Node.js API scopes data to client account]
+    Dashboard[View SEO dashboard]
+    Progress[View completed work]
+    Priorities[View current priorities]
+    Reports[View approved reports]
+    Download[Download PDF report]
+    Recommendations[View recommendations]
+
+    ClientLogin --&gt; Scope
+    Scope --&gt; Dashboard
+    Dashboard --&gt; Progress
+    Dashboard --&gt; Priorities
+    Dashboard --&gt; Reports
+    Reports --&gt; Download
+    Dashboard --&gt; Recommendations
+</pre><h2>9. Use Case Diagram: Audit-to-Task Flow</h2>
+<pre class="mermaid">flowchart TD
+    Trigger[User triggers audit]
+    Queue[Node.js API queues audit job]
+    Crawl[Node.js worker crawls or generates audit data]
+    Detect[Worker detects SEO issues]
+    Prioritize[Worker assigns severity]
+    Review[Manager reviews issues]
+    Convert[Convert issue to task]
+    Assign[Assign task to employee]
+    Work[Employee completes work]
+    Resolve[Issue marked resolved]
+    Report[Completed work appears in report]
+
+    Trigger --&gt; Queue
+    Queue --&gt; Crawl
+    Crawl --&gt; Detect
+    Detect --&gt; Prioritize
+    Prioritize --&gt; Review
+    Review --&gt; Convert
+    Convert --&gt; Assign
+    Assign --&gt; Work
+    Work --&gt; Resolve
+    Resolve --&gt; Report
+</pre><h2>10. Use Case Diagram: Keyword Research</h2>
+<pre class="mermaid">flowchart TD
+    Seed[Seed Keyword / Client Service / URL]
+    Sources[Sources: GSC GA4 Competitors Manual CSV]
+    Normalize[Node.js normalizes keyword data]
+    Ideas[Generate keyword ideas]
+    Cluster[Cluster by topic intent location funnel]
+    Score[Score opportunity]
+    Track[Add to rank tracking]
+    Brief[Create content brief]
+    Task[Create SEO task]
+    Dashboard[Show in SEO dashboard]
+
+    Seed --&gt; Sources
+    Sources --&gt; Normalize
+    Normalize --&gt; Ideas
+    Ideas --&gt; Cluster
+    Cluster --&gt; Score
+    Score --&gt; Track
+    Score --&gt; Brief
+    Score --&gt; Task
+    Track --&gt; Dashboard
+</pre><h2>11. Use Case Diagram: Backlink Research and Link Building</h2>
+<pre class="mermaid">flowchart TD
+    Website[Client Website]
+    Competitors[Competitor Domains]
+    Backlinks[Collect backlink data]
+    Normalize[Normalize referring domains anchors authority]
+    Gap[Backlink gap / link intersect]
+    Broken[Find broken backlinks]
+    Toxic[Flag suspicious backlinks]
+    Prospects[Create link prospects]
+    Tasks[Create link-building tasks]
+    Reports[Report backlink wins losses progress]
+
+    Website --&gt; Backlinks
+    Competitors --&gt; Backlinks
+    Backlinks --&gt; Normalize
+    Normalize --&gt; Gap
+    Normalize --&gt; Broken
+    Normalize --&gt; Toxic
+    Gap --&gt; Prospects
+    Broken --&gt; Tasks
+    Toxic --&gt; Tasks
+    Prospects --&gt; Tasks
+    Tasks --&gt; Reports
+</pre><h2>12. Use Case Diagram: AI Research and Optimization Flow</h2>
+<pre class="mermaid">flowchart TD
+    Data[SEO Platform Data]
+    Scope[Tenant and role scoping]
+    Context[Clean AI context package]
+    Adapter[Node.js AI adapter]
+    AIPlatform[AI Platform]
+    Research[Research outputs]
+    Optimize[Optimization outputs]
+    Store[Store AI request history]
+    Review[Manager review]
+    Task[Create task]
+    Report[Add to approved report]
+    Portal[Client portal]
+
+    Data --&gt; Scope
+    Scope --&gt; Context
+    Context --&gt; Adapter
+    Adapter --&gt; AIPlatform
+    AIPlatform --&gt; Research
+    AIPlatform --&gt; Optimize
+    Research --&gt; Store
+    Optimize --&gt; Store
+    Store --&gt; Review
+    Review --&gt; Task
+    Review --&gt; Report
+    Report --&gt; Portal
+</pre><h2>13. Use Case Diagram: AI Assistant</h2>
+<pre class="mermaid">flowchart LR
+    User[Admin / Manager / Employee]
+    Context[Client SEO Context]
+    API[Node.js AI Route]
+    Prompt[AI Request]
+    LLM[LLM Provider]
+    Output[AI Output]
+    Store[Store AI Request]
+    Task[Attach to Task]
+    Report[Use in Report Draft]
+
+    User --&gt; API
+    Context --&gt; API
+    API --&gt; Prompt
+    Prompt --&gt; LLM
+    LLM --&gt; Output
+    Output --&gt; Store
+    Output --&gt; Task
+    Output --&gt; Report
+</pre><h2>14. 10-Day Company-Level JavaScript Timeline</h2>
+<h2>Day 1: JavaScript Project Foundation</h2>
+<p><strong>Focus:</strong> Establish the full-stack JavaScript architecture.</p>
+<ul>
+<li>Set up React.js app with Vite.</li>
+<li>Set up Node.js backend API project.</li>
+<li>Set up shared JavaScript config and environment handling.</li>
+<li>Set up PostgreSQL connection through Prisma.</li>
+<li>Define Prisma schema for agencies, users, roles, clients, websites, competitors, keywords, audits, tasks, reports, alerts, integrations, and AI requests.</li>
+<li>Define RBAC permissions in JavaScript.</li>
+<li>Define tenant scoping helpers.</li>
+<li>Define client-safe serializers.</li>
+<li>Add lint/build/test scripts.</li>
+</ul>
+<p><strong>Output:</strong> Full-stack JavaScript foundation ready for feature implementation.</p>
+<h2>Day 2: Auth, Roles, and Tenant Security</h2>
+<p><strong>Focus:</strong> Build secure access control first.</p>
+<ul>
+<li>Implement signup and login in Node.js.</li>
+<li>Hash passwords with a Node.js library.</li>
+<li>Issue JWT access tokens.</li>
+<li>Add refresh-token flow.</li>
+<li>Add Admin, Manager, Employee, and Client roles.</li>
+<li>Add backend route guards.</li>
+<li>Add protected React routes.</li>
+<li>Add tenant-isolation tests.</li>
+</ul>
+<p><strong>Output:</strong> Users can authenticate and access only allowed data.</p>
+<h2>Day 3: Client and Team Management</h2>
+<p><strong>Focus:</strong> Build agency operating foundation.</p>
+<ul>
+<li>Build client CRUD API.</li>
+<li>Build client list/detail UI.</li>
+<li>Build contacts and internal notes.</li>
+<li>Add team user management.</li>
+<li>Assign managers and employees to clients.</li>
+<li>Add activity log entries.</li>
+<li>Hide retainer/internal fields from client role.</li>
+</ul>
+<p><strong>Output:</strong> Agency users can manage clients and team assignments safely.</p>
+<h2>Day 4: Website and Competitor Management</h2>
+<p><strong>Focus:</strong> Make websites the center of SEO work.</p>
+<ul>
+<li>Build website CRUD API and UI.</li>
+<li>Store CMS, business category, locations, locale, and search engines.</li>
+<li>Build website workspace tabs.</li>
+<li>Add competitor CRUD API and UI.</li>
+<li>Add backlink research data model.</li>
+<li>Add competitor backlink source placeholders.</li>
+<li>Add seed/demo data through JS seed script.</li>
+</ul>
+<p><strong>Output:</strong> Each client can have websites, competitors, and project-level SEO settings.</p>
+<h2>Day 5: Keyword Tracking and Ranking History</h2>
+<p><strong>Focus:</strong> Build keyword intelligence foundation.</p>
+<ul>
+<li>Build keyword CRUD API and UI.</li>
+<li>Build keyword groups.</li>
+<li>Add ranking history model.</li>
+<li>Add mock ranking generator in Node.js.</li>
+<li>Add keyword table filters.</li>
+<li>Add ranking trend charts.</li>
+<li>Add keyword research workflow: seed keywords, competitor keywords, questions, related terms, and long-tail ideas.</li>
+<li>Add keyword opportunity scoring.</li>
+<li>Add import/export foundation.</li>
+</ul>
+<p><strong>Output:</strong> Users can track keywords and ranking movement.</p>
+<h2>Day 6: SEO Dashboard and Share of Voice</h2>
+<p><strong>Focus:</strong> Build the main performance dashboard.</p>
+<ul>
+<li>Build SEO summary API.</li>
+<li>Add traffic trend API.</li>
+<li>Add KPI cards in React.</li>
+<li>Add ranking distribution chart.</li>
+<li>Add keyword movement chart.</li>
+<li>Add top pages section.</li>
+<li>Add competitor visibility/share-of-voice calculation.</li>
+<li>Add mock/live labels.</li>
+<li>Add client-safe dashboard response.</li>
+</ul>
+<p><strong>Output:</strong> Internal users and clients can view scoped SEO performance.</p>
+<h2>Day 7: Technical Audit Engine V1</h2>
+<p><strong>Focus:</strong> Build Node.js crawl/audit foundation.</p>
+<ul>
+<li>Add audit run model.</li>
+<li>Add crawled URL model.</li>
+<li>Add technical issue model.</li>
+<li>Create Node.js audit worker.</li>
+<li>Generate rule-based technical issues.</li>
+<li>Add issue severity scoring.</li>
+<li>Build audit UI.</li>
+<li>Add mark-resolved action.</li>
+<li>Add issue-to-task conversion.</li>
+</ul>
+<p><strong>Output:</strong> Users can run audits, inspect issues, and convert issues into work.</p>
+<h2>Day 8: Task Workflow and Alerts</h2>
+<p><strong>Focus:</strong> Connect SEO insights to execution.</p>
+<ul>
+<li>Build task CRUD API and UI.</li>
+<li>Add comments and attachment metadata.</li>
+<li>Add assignment flow.</li>
+<li>Add status transitions.</li>
+<li>Add My Tasks view.</li>
+<li>Add manager workload view.</li>
+<li>Add notifications and alerts.</li>
+<li>Add activity logging.</li>
+</ul>
+<p><strong>Output:</strong> SEO findings can become assigned and trackable work.</p>
+<h2>Day 9: Reports and Client Portal</h2>
+<p><strong>Focus:</strong> Package work into client-facing outcomes.</p>
+<ul>
+<li>Build report model and API.</li>
+<li>Aggregate traffic, keyword, audit, task, and recommendation data.</li>
+<li>Build report preview UI.</li>
+<li>Generate PDF with Node.js Playwright/Puppeteer.</li>
+<li>Add approval workflow.</li>
+<li>Build client portal dashboard.</li>
+<li>Build approved reports page.</li>
+</ul>
+<p><strong>Output:</strong> Clients can view approved progress and download reports.</p>
+<h2>Day 10: AI, QA, Hardening, and Deployment Prep</h2>
+<p><strong>Focus:</strong> Make the MVP foundation credible for company use.</p>
+<ul>
+<li>Add Node.js AI provider abstraction.</li>
+<li>Add prompts for keyword research expansion, backlink prospect research, ranking explanations, content briefs, audit summaries, and report summaries.</li>
+<li>Store AI request history.</li>
+<li>Add rate limiting.</li>
+<li>Run frontend tests.</li>
+<li>Run backend API tests.</li>
+<li>Run tenant-isolation tests.</li>
+<li>Run lint/build checks.</li>
+<li>Prepare deployment checklist.</li>
+<li>Fix critical security and UX issues.</li>
+</ul>
+<p><strong>Output:</strong> Company-level JavaScript MVP foundation ready for staging.</p>
+<h2>15. Timeline Diagram</h2>
+<pre class="mermaid">gantt
+    title 10-Day JavaScript SEO Agency Platform Sprint
+    dateFormat  YYYY-MM-DD
+    axisFormat  %d %b
+
+    section Foundation
+    Full-stack JavaScript foundation       :d1, 2026-08-27, 1d
+    Auth roles and tenant security         :d2, after d1, 1d
+
+    section Core Operations
+    Client and team management             :d3, after d2, 1d
+    Website and competitor management      :d4, after d3, 1d
+
+    section SEO Intelligence
+    Keyword tracking and rankings          :d5, after d4, 1d
+    SEO dashboard and share of voice       :d6, after d5, 1d
+    Technical audit engine V1              :d7, after d6, 1d
+
+    section Delivery
+    Task workflow and alerts               :d8, after d7, 1d
+    Reports and client portal              :d9, after d8, 1d
+
+    section Hardening
+    AI QA hardening and deployment prep    :d10, after d9, 1d
+</pre><h2>16. Dependency Timeline</h2>
+<pre class="mermaid">flowchart LR
+    D1[Day 1: JS Foundation]
+    D2[Day 2: Auth and Security]
+    D3[Day 3: Clients and Team]
+    D4[Day 4: Websites and Competitors]
+    D5[Day 5: Keywords and Rankings]
+    D6[Day 6: SEO Dashboard]
+    D7[Day 7: Technical Audits]
+    D8[Day 8: Tasks and Alerts]
+    D9[Day 9: Reports and Portal]
+    D10[Day 10: AI QA Deployment]
+
+    D1 --&gt; D2
+    D2 --&gt; D3
+    D3 --&gt; D4
+    D4 --&gt; D5
+    D5 --&gt; D6
+    D6 --&gt; D7
+    D7 --&gt; D8
+    D6 --&gt; D9
+    D8 --&gt; D9
+    D9 --&gt; D10
+</pre><h2>17. Expected End-of-Sprint Flow</h2>
+<p>At the end of 10 days, the product should support this company-level MVP flow:</p>
+<ol>
+<li>Admin creates agency workspace.</li>
+<li>Admin invites team members.</li>
+<li>Admin or Manager creates a client.</li>
+<li>Manager adds websites and competitors.</li>
+<li>Manager tracks keywords and ranking history.</li>
+<li>Manager reviews SEO dashboard.</li>
+<li>Manager runs keyword research and adds priority keyword opportunities.</li>
+<li>Manager reviews backlink gaps and creates link-building prospects.</li>
+<li>Manager runs a technical audit.</li>
+<li>Manager converts an issue or backlink opportunity into a task.</li>
+<li>Employee completes the assigned task.</li>
+<li>AI assistant generates an internal optimization summary.</li>
+<li>Manager reviews and approves the AI-supported recommendation.</li>
+<li>Manager generates and approves a report.</li>
+<li>Client logs in and views the approved report and client-safe dashboard.</li>
+</ol>
+<h2>18. Out of Scope for the First 10 Days</h2>
+<ul>
+<li>Billing/subscription system.</li>
+<li>Full CRM/sales pipeline.</li>
+<li>Enterprise SSO.</li>
+<li>Custom white-label domains.</li>
+<li>Production-scale backlink index.</li>
+<li>Production-scale crawler cluster.</li>
+<li>Advanced AI visibility tracking.</li>
+<li>Fully automated AI agents.</li>
+</ul>
+<p>These are not rejected features. They are later-phase work after the JavaScript MVP foundation is stable.</p>
+<h2>19. Key Constraint</h2>
+<p>Because this project must be fully JavaScript, no Python, FastAPI, Django, Flask, or Python-based PDF tooling should be used.</p>
+<p>All implementation should use JavaScript or Node.js equivalents.</p>
+</main>
+  <script type="module">
+    import mermaid from "/node_modules/mermaid/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "loose",
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#eaf4fb",
+        primaryTextColor: "#172026",
+        primaryBorderColor: "#7aa7c7",
+        lineColor: "#52616b",
+        secondaryColor: "#f7fbff",
+        tertiaryColor: "#ffffff",
+        fontFamily: "Inter, Segoe UI, Arial, sans-serif"
+      }
+    });
+    try {
+      await mermaid.run({ querySelector: ".mermaid", suppressErrors: false });
+      window.__MERMAID_RENDERED__ = true;
+    } catch (error) {
+      console.error(error?.message || error);
+      window.__MERMAID_ERROR__ = error?.message || String(error);
+      window.__MERMAID_RENDERED__ = true;
+    }
+  </script>
+</body>
+</html>

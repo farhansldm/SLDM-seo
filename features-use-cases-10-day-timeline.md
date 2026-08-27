@@ -119,16 +119,20 @@ flowchart TD
 - Mock/live data indicator.
 - Client-safe dashboard version.
 
-## 3.5 Keyword Management
+## 3.5 Keyword Research and Keyword Management
 
-- Add and edit keywords.
-- Group keywords.
-- Store search volume, difficulty, CPC, intent, target page, device, location, and language.
-- Track ranking history.
+- Discover keywords by seed term, URL, competitor domain, service category, and location.
+- Generate keyword ideas grouped by questions, comparisons, prepositions, related terms, and long-tail opportunities.
+- Store search volume, difficulty, CPC, intent, target page, device, location, language, and SERP feature presence.
+- Add and edit tracked keywords.
+- Group keywords by campaign, topic cluster, funnel stage, location, or client priority.
+- Track ranking history over time.
 - Show improved, declined, unchanged, top 3, top 10, and top 100 keywords.
+- Identify keyword gaps against competitors.
+- Identify keyword cannibalization where multiple client pages compete for the same query.
+- Calculate keyword opportunity score using volume, difficulty, ranking distance, business value, and current page strength.
+- Create content briefs or SEO tasks directly from keyword opportunities.
 - CSV import/export.
-- Keyword opportunity score.
-- Future keyword gap against competitors.
 
 ## 3.6 Competitor Intelligence
 
@@ -138,9 +142,26 @@ flowchart TD
 - Identify shared keywords.
 - Show competitor top pages.
 - Show competitor visibility score.
+- Track competitor content velocity.
+- Track competitor backlink sources.
+- Identify competitor pages that should be outranked or used as content references.
 - Basic share-of-voice calculation.
 
-## 3.7 Technical SEO Audit
+## 3.7 Backlink Research and Link Building
+
+- Store backlink inventory for each website.
+- Track referring domains, source URLs, target URLs, anchor text, dofollow/nofollow status, and authority metrics.
+- Identify new and lost backlinks.
+- Identify broken backlinks pointing to missing client pages.
+- Identify toxic or suspicious backlinks for review.
+- Compare backlinks against competitors.
+- Run backlink gap/link intersect analysis to find domains linking to competitors but not the client.
+- Create link-building prospects from competitor backlink sources.
+- Track outreach status without turning the product into a full CRM.
+- Convert backlink opportunities or broken backlink issues into tasks.
+- Include backlink wins/losses and link-building progress in reports.
+
+## 3.8 Technical SEO Audit
 
 - Trigger website audit from React UI.
 - Queue audit job in Node.js worker.
@@ -166,7 +187,7 @@ flowchart TD
 - Mark issues as resolved.
 - Convert audit issue into task.
 
-## 3.8 Task and Workflow Management
+## 3.9 Task and Workflow Management
 
 - Create, edit, view, and delete tasks.
 - Assign tasks to users.
@@ -179,7 +200,7 @@ flowchart TD
 - Manager workload view.
 - Activity logs.
 
-## 3.9 Reporting and Client Portal
+## 3.10 Reporting and Client Portal
 
 - Generate monthly SEO reports.
 - Report sections:
@@ -197,7 +218,7 @@ flowchart TD
 - Client portal report view.
 - Client dashboard with restricted fields.
 
-## 3.10 AI Assistant
+## 3.11 AI Assistant
 
 - Ranking drop explanation.
 - Keyword suggestions.
@@ -209,7 +230,7 @@ flowchart TD
 - Apply rate limiting on AI endpoints.
 - Keep AI output internal until approved.
 
-## 3.11 Alerts and Notifications
+## 3.12 Alerts and Notifications
 
 - Task assigned notification.
 - Deadline approaching notification.
@@ -219,7 +240,7 @@ flowchart TD
 - Report ready alert.
 - Integration sync failure alert.
 
-## 3.12 Integrations Foundation
+## 3.13 Integrations Foundation
 
 - Mock integration provider for development.
 - JavaScript adapter interface for real integrations.
@@ -230,6 +251,33 @@ flowchart TD
   - Google Business Profile.
   - Semrush.
   - Ahrefs.
+
+## 3.14 AI Platform Research and Optimization
+
+This platform should not only use AI to write text. It should use AI platforms as an SEO research and optimization layer.
+
+The AI workflow works like this:
+
+1. Collect structured SEO data from the platform: keywords, rankings, pages, audits, competitors, backlinks, traffic, tasks, and reports.
+2. Normalize that data in the Node.js service layer so the AI receives clean context instead of raw database dumps.
+3. Send scoped prompts to the AI provider through a JavaScript adapter.
+4. Generate research outputs: keyword opportunities, topic clusters, content gaps, backlink prospects, competitor summaries, and technical issue explanations.
+5. Generate optimization outputs: title/meta suggestions, content brief recommendations, internal link suggestions, schema recommendations, page refresh guidance, and report summaries.
+6. Store every AI request and result with user, client, input context, output, provider, and timestamp.
+7. Keep AI output internal by default. A manager must approve anything before it appears in a client report or portal.
+
+AI platform features:
+
+- Keyword research expansion from seed keywords, competitor domains, and page URLs.
+- Content gap analysis using competitor pages and missing keyword clusters.
+- Backlink prospect prioritization based on competitor links and topical relevance.
+- Technical audit explanation in plain language.
+- On-page optimization recommendations.
+- Content brief generation.
+- Existing content refresh recommendations.
+- Internal linking recommendations.
+- Report executive summaries.
+- AI search/AEO readiness checks for future platforms like AI Overviews, ChatGPT, Gemini, and Perplexity-style answer engines.
 
 ## 4. Primary Actors
 
@@ -320,7 +368,9 @@ flowchart LR
     ManageClients((Manage Clients))
     ManageWebsites((Manage Websites))
     ViewDashboard((View SEO Dashboard))
-    ManageKeywords((Manage Keywords))
+    ManageKeywords((Keyword Research))
+    BacklinkResearch((Backlink Research))
+    LinkBuilding((Link Building))
     RunAudit((Run Technical Audit))
     ManageTasks((Manage Tasks))
     GenerateReports((Generate Reports))
@@ -342,6 +392,8 @@ flowchart LR
     Manager --> ManageWebsites
     Manager --> ViewDashboard
     Manager --> ManageKeywords
+    Manager --> BacklinkResearch
+    Manager --> LinkBuilding
     Manager --> RunAudit
     Manager --> ManageTasks
     Manager --> GenerateReports
@@ -349,6 +401,7 @@ flowchart LR
 
     Employee --> Auth
     Employee --> ViewDashboard
+    Employee --> BacklinkResearch
     Employee --> ManageTasks
     Employee --> RunAudit
     Employee --> UseAI
@@ -448,7 +501,92 @@ flowchart TD
     Resolve --> Report
 ```
 
-## 10. Use Case Diagram: AI Assistant
+## 10. Use Case Diagram: Keyword Research
+
+```mermaid
+flowchart TD
+    Seed[Seed Keyword / Client Service / URL]
+    Sources[Sources: GSC GA4 Competitors Manual CSV]
+    Normalize[Node.js normalizes keyword data]
+    Ideas[Generate keyword ideas]
+    Cluster[Cluster by topic intent location funnel]
+    Score[Score opportunity]
+    Track[Add to rank tracking]
+    Brief[Create content brief]
+    Task[Create SEO task]
+    Dashboard[Show in SEO dashboard]
+
+    Seed --> Sources
+    Sources --> Normalize
+    Normalize --> Ideas
+    Ideas --> Cluster
+    Cluster --> Score
+    Score --> Track
+    Score --> Brief
+    Score --> Task
+    Track --> Dashboard
+```
+
+## 11. Use Case Diagram: Backlink Research and Link Building
+
+```mermaid
+flowchart TD
+    Website[Client Website]
+    Competitors[Competitor Domains]
+    Backlinks[Collect backlink data]
+    Normalize[Normalize referring domains anchors authority]
+    Gap[Backlink gap / link intersect]
+    Broken[Find broken backlinks]
+    Toxic[Flag suspicious backlinks]
+    Prospects[Create link prospects]
+    Tasks[Create link-building tasks]
+    Reports[Report backlink wins losses progress]
+
+    Website --> Backlinks
+    Competitors --> Backlinks
+    Backlinks --> Normalize
+    Normalize --> Gap
+    Normalize --> Broken
+    Normalize --> Toxic
+    Gap --> Prospects
+    Broken --> Tasks
+    Toxic --> Tasks
+    Prospects --> Tasks
+    Tasks --> Reports
+```
+
+## 12. Use Case Diagram: AI Research and Optimization Flow
+
+```mermaid
+flowchart TD
+    Data[SEO Platform Data]
+    Scope[Tenant and role scoping]
+    Context[Clean AI context package]
+    Adapter[Node.js AI adapter]
+    AIPlatform[AI Platform]
+    Research[Research outputs]
+    Optimize[Optimization outputs]
+    Store[Store AI request history]
+    Review[Manager review]
+    Task[Create task]
+    Report[Add to approved report]
+    Portal[Client portal]
+
+    Data --> Scope
+    Scope --> Context
+    Context --> Adapter
+    Adapter --> AIPlatform
+    AIPlatform --> Research
+    AIPlatform --> Optimize
+    Research --> Store
+    Optimize --> Store
+    Store --> Review
+    Review --> Task
+    Review --> Report
+    Report --> Portal
+```
+
+## 13. Use Case Diagram: AI Assistant
 
 ```mermaid
 flowchart LR
@@ -472,7 +610,7 @@ flowchart LR
     Output --> Report
 ```
 
-## 11. 10-Day Company-Level JavaScript Timeline
+## 14. 10-Day Company-Level JavaScript Timeline
 
 ## Day 1: JavaScript Project Foundation
 
@@ -527,6 +665,8 @@ flowchart LR
 - Store CMS, business category, locations, locale, and search engines.
 - Build website workspace tabs.
 - Add competitor CRUD API and UI.
+- Add backlink research data model.
+- Add competitor backlink source placeholders.
 - Add seed/demo data through JS seed script.
 
 **Output:** Each client can have websites, competitors, and project-level SEO settings.
@@ -541,6 +681,8 @@ flowchart LR
 - Add mock ranking generator in Node.js.
 - Add keyword table filters.
 - Add ranking trend charts.
+- Add keyword research workflow: seed keywords, competitor keywords, questions, related terms, and long-tail ideas.
+- Add keyword opportunity scoring.
 - Add import/export foundation.
 
 **Output:** Users can track keywords and ranking movement.
@@ -611,7 +753,7 @@ flowchart LR
 **Focus:** Make the MVP foundation credible for company use.
 
 - Add Node.js AI provider abstraction.
-- Add prompts for ranking explanations, content briefs, audit summaries, and report summaries.
+- Add prompts for keyword research expansion, backlink prospect research, ranking explanations, content briefs, audit summaries, and report summaries.
 - Store AI request history.
 - Add rate limiting.
 - Run frontend tests.
@@ -623,7 +765,7 @@ flowchart LR
 
 **Output:** Company-level JavaScript MVP foundation ready for staging.
 
-## 12. Timeline Diagram
+## 15. Timeline Diagram
 
 ```mermaid
 gantt
@@ -652,7 +794,7 @@ gantt
     AI QA hardening and deployment prep    :d10, after d9, 1d
 ```
 
-## 13. Dependency Timeline
+## 16. Dependency Timeline
 
 ```mermaid
 flowchart LR
@@ -679,7 +821,7 @@ flowchart LR
     D9 --> D10
 ```
 
-## 14. Expected End-of-Sprint Flow
+## 17. Expected End-of-Sprint Flow
 
 At the end of 10 days, the product should support this company-level MVP flow:
 
@@ -689,13 +831,17 @@ At the end of 10 days, the product should support this company-level MVP flow:
 4. Manager adds websites and competitors.
 5. Manager tracks keywords and ranking history.
 6. Manager reviews SEO dashboard.
-7. Manager runs a technical audit.
-8. Manager converts an issue into a task.
-9. Employee completes the assigned task.
-10. Manager generates and approves a report.
-11. Client logs in and views the approved report and client-safe dashboard.
+7. Manager runs keyword research and adds priority keyword opportunities.
+8. Manager reviews backlink gaps and creates link-building prospects.
+9. Manager runs a technical audit.
+10. Manager converts an issue or backlink opportunity into a task.
+11. Employee completes the assigned task.
+12. AI assistant generates an internal optimization summary.
+13. Manager reviews and approves the AI-supported recommendation.
+14. Manager generates and approves a report.
+15. Client logs in and views the approved report and client-safe dashboard.
 
-## 15. Out of Scope for the First 10 Days
+## 18. Out of Scope for the First 10 Days
 
 - Billing/subscription system.
 - Full CRM/sales pipeline.
@@ -708,7 +854,7 @@ At the end of 10 days, the product should support this company-level MVP flow:
 
 These are not rejected features. They are later-phase work after the JavaScript MVP foundation is stable.
 
-## 16. Key Constraint
+## 19. Key Constraint
 
 Because this project must be fully JavaScript, no Python, FastAPI, Django, Flask, or Python-based PDF tooling should be used.
 
