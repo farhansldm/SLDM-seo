@@ -1,11 +1,24 @@
 ﻿import { Route, Routes } from "react-router-dom";
 
+import { AuthProvider } from "../features/auth/AuthProvider.jsx";
+import { LoginPage } from "../features/auth/LoginPage.jsx";
+import { ProtectedRoute } from "../features/auth/ProtectedRoute.jsx";
 import { DashboardPage } from "../features/dashboard/DashboardPage.jsx";
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/" element={<DashboardPage />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </AuthProvider>
   );
 }

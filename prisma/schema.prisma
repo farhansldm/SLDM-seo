@@ -39,7 +39,7 @@ model User {
   agencyId       String
   roleId         Int
   email          String             @unique
-  passwordHash   String
+  supabaseAuthId String?            @unique
   fullName       String?
   isActive       Boolean            @default(true)
   clientId       String?

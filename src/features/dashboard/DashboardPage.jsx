@@ -1,17 +1,28 @@
-import { productModules } from "../../../shared/modules.js";
+﻿import { productModules } from "../../../shared/modules.js";
+import { useAuth } from "../auth/AuthProvider.jsx";
 
 export function DashboardPage() {
   const dayOneModules = productModules.filter((module) => module.dayOneScope);
+  const { signOut, user } = useAuth();
 
   return (
     <main className="page-shell">
-      <header className="page-header">
-        <span>JavaScript-only company foundation</span>
-        <h1>SEO Agency Platform</h1>
-        <p>
-          Day 1 establishes the React app, Node API foundation, Prisma data model, RBAC rules, tenant scoping, and
-          client-safe response contracts.
-        </p>
+      <header className="page-header page-header-row">
+        <div>
+          <span>JavaScript-only company foundation</span>
+          <h1>SEO Agency Platform</h1>
+          <p>
+            Day 1 establishes the React app, Node API foundation, Prisma data model, RBAC rules, tenant scoping, and
+            client-safe response contracts.
+          </p>
+        </div>
+        <div className="session-card" aria-label="Current session">
+          <strong>{user?.fullName ?? "Authenticated user"}</strong>
+          <span>{user?.role ?? "role"}</span>
+          <button onClick={signOut} type="button">
+            Sign out
+          </button>
+        </div>
       </header>
 
       <section className="module-grid" aria-label="Day 1 modules">
