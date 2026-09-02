@@ -268,3 +268,159 @@ button:disabled {
     margin-top: 20px;
   }
 }
+
+.quick-actions,
+.keyword-toolbar,
+.keyword-summary,
+.keyword-workspace,
+.keyword-actions,
+.keyword-table-wrap {
+  max-width: 1120px;
+  margin: 16px auto 0;
+}
+
+.quick-actions a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 14px;
+  text-decoration: none;
+}
+
+.keyword-toolbar {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.keyword-toolbar label,
+.keyword-form {
+  display: grid;
+  gap: 8px;
+  color: #3c4b55;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.keyword-toolbar input,
+.keyword-toolbar select,
+.keyword-form input,
+.keyword-actions textarea {
+  min-height: 40px;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #ffffff;
+  color: #172026;
+}
+
+.keyword-toolbar button,
+.keyword-form button,
+.keyword-actions button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.keyword-error {
+  max-width: 1120px;
+  margin: 12px auto 0;
+}
+
+.keyword-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card,
+.keyword-form,
+.keyword-chart,
+.keyword-actions,
+.keyword-table-wrap {
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.metric-card span {
+  display: block;
+  color: #6b7b88;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.metric-card strong {
+  font-size: 26px;
+}
+
+.keyword-workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.keyword-form h2,
+.keyword-chart h2 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.keyword-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+}
+
+.keyword-actions textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.keyword-actions div {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.keyword-table-wrap {
+  overflow-x: auto;
+}
+
+.keyword-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.keyword-table th,
+.keyword-table td {
+  border-bottom: 1px solid #e3e9ef;
+  padding: 12px 10px;
+  text-align: left;
+}
+
+.keyword-table th {
+  color: #52616b;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 920px) {
+  .keyword-toolbar,
+  .keyword-workspace,
+  .keyword-actions,
+  .keyword-summary {
+    grid-template-columns: 1fr;
+  }
+}
