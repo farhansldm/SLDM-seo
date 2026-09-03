@@ -81,8 +81,18 @@ function summarizeKeywords(keywords) {
   };
 }
 
+function opportunityScore(keyword, movement = movementForKeyword(keyword)) {
+  const volume = Number(keyword.searchVolume ?? 0);
+  const difficulty = Number(keyword.difficulty ?? 50);
+  const currentRank = movement.latest ?? 100;
+  const distanceScore = Math.max(0, 101 - currentRank);
+  const businessValue = { transactional: 25, commercial: 20, informational: 12, navigational: 8 }[keyword.intent] ?? 10;
+  return Math.round(Math.min(100, volume / 100 + (100 - difficulty) * 0.35 + distanceScore * 0.25 + businessValue));
+}
+
 function withMovement(keyword) {
-  return { ...keyword, movement: movementForKeyword(keyword) };
+  const movement = movementForKeyword(keyword);
+  return { ...keyword, movement, opportunityScore: opportunityScore(keyword, movement) };
 }
 
 function generateRankings(keyword, days) {
@@ -166,6 +176,41 @@ export class KeywordService {
       dashboard.keywords.map((keyword) => this.keywordRepository.replaceRankings(keyword.id, generateRankings(keyword, boundedDays))),
     );
     return this.listDashboard(user, websiteId, {});
+  }
+
+  generateKeywordIdeas(seed, location = "United States") {
+    const base = String(seed ?? "").trim().toLowerCase();
+    if (!base) return { ideas: [] };
+    const patterns = [
+      [base, "commercial"],
+      [`what is ${base}`, "informational"],
+      [`${base} services`, "commercial"],
+      [`best ${base} company`, "commercial"],
+      [`${base} near me`, "transactional"],
+      [`${base} pricing`, "transactional"],
+      [`${base} vs alternatives`, "commercial"],
+      [`how to choose ${base}`, "informational"],
+      [`${location} ${base}`, "transactional"],
+      [`affordable ${base}`, "transactional"],
+    ];
+    const ideas = patterns.map(([keyword, intent], index) => {
+      const difficulty = Math.min(88, 24 + index * 6);
+      const searchVolume = Math.max(90, 1600 - index * 130);
+      return {
+        keyword,
+        intent,
+        location,
+        language: "en",
+        device: index % 2 === 0 ? "desktop" : "mobile",
+        searchVolume,
+        difficulty,
+        cpc: Math.round((1.2 + index * 0.35) * 100) / 100,
+        source: "mock_research",
+        opportunityScore: opportunityScore({ searchVolume, difficulty, intent, rankings: [] }),
+        group: index < 2 ? "seed" : index < 5 ? "related" : index < 8 ? "long-tail" : "location",
+      };
+    });
+    return { ideas };
   }
 
   async importKeywords(user, websiteId, payload) {

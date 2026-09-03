@@ -1,4 +1,4 @@
-﻿import request from "supertest";
+import request from "supertest";
 import { describe, expect, it } from "vitest";
 
 import { createApp } from "../server/app.js";
@@ -166,4 +166,17 @@ describe("keyword intelligence routes", () => {
     expect(crossTenant.status).toBe(404);
     expect(unassigned.status).toBe(404);
   });
-});
+
+  it("generates keyword research ideas with opportunity scores", async () => {
+    const app = makeApp();
+
+    const response = await request(app)
+      .post("/api/v1/keywords/research")
+      .set("Authorization", "Bearer manager-auth")
+      .send({ seed: "seo agency", location: "India" });
+
+    expect(response.status).toBe(200);
+    expect(response.body.ideas).toHaveLength(10);
+    expect(response.body.ideas[0]).toMatchObject({ source: "mock_research", location: "India" });
+    expect(response.body.ideas[0].opportunityScore).toBeGreaterThan(0);
+  });});

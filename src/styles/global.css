@@ -681,3 +681,90 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+.ops-toolbar,
+.ops-layout {
+  max-width: 1120px;
+  margin: 16px auto 0;
+}
+
+.ops-toolbar {
+  display: flex;
+  gap: 12px;
+}
+
+.ops-toolbar input,
+.ops-panel input,
+.ops-panel select,
+.ops-panel textarea {
+  min-height: 40px;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.ops-toolbar button,
+.ops-panel button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.ops-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  gap: 12px;
+}
+
+.ops-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.ops-panel h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.row-button {
+  text-align: left;
+  background: #f8fbfd !important;
+  color: #172026 !important;
+  border: 1px solid #dbe3ea !important;
+}
+
+.row-button strong,
+.row-button span {
+  display: block;
+}
+
+.row-button span,
+.tab-list span {
+  color: #52616b;
+  font-size: 13px;
+}
+
+.tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tab-list span {
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  padding: 4px 7px;
+}
+
+@media (max-width: 920px) {
+  .ops-layout { grid-template-columns: 1fr; }
+  .ops-toolbar { display: grid; }
+}

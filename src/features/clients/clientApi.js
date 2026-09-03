@@ -1,0 +1,7 @@
+﻿const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api/v1";
+async function parseResponse(response){ const payload=await response.json().catch(()=>({})); if(!response.ok) throw new Error(payload.error ?? "Request failed"); return payload; }
+export async function fetchClients(accessToken){ return parseResponse(await fetch(`${API_BASE_URL}/clients`,{headers:{Authorization:`Bearer ${accessToken}`}})); }
+export async function createClient(accessToken,input){ return parseResponse(await fetch(`${API_BASE_URL}/clients`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify(input)})); }
+export async function addClientContact(accessToken,clientId,input){ return parseResponse(await fetch(`${API_BASE_URL}/clients/${clientId}/contacts`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify(input)})); }
+export async function addClientNote(accessToken,clientId,note){ return parseResponse(await fetch(`${API_BASE_URL}/clients/${clientId}/notes`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify({note})})); }
+export async function assignClientUser(accessToken,clientId,userId){ return parseResponse(await fetch(`${API_BASE_URL}/clients/${clientId}/assignments`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify({userId})})); }

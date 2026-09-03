@@ -1,0 +1,5 @@
+﻿const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api/v1";
+async function parseResponse(response){ const payload=await response.json().catch(()=>({})); if(!response.ok) throw new Error(payload.error ?? "Request failed"); return payload; }
+export async function fetchWebsites(accessToken,clientId){ return parseResponse(await fetch(`${API_BASE_URL}/clients/${clientId}/websites`,{headers:{Authorization:`Bearer ${accessToken}`}})); }
+export async function createWebsite(accessToken,clientId,input){ return parseResponse(await fetch(`${API_BASE_URL}/clients/${clientId}/websites`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify(input)})); }
+export async function createCompetitor(accessToken,websiteId,input){ return parseResponse(await fetch(`${API_BASE_URL}/websites/${websiteId}/competitors`,{method:"POST",headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"application/json"},body:JSON.stringify(input)})); }

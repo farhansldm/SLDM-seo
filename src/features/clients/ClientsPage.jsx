@@ -1,0 +1,18 @@
+﻿import { useState } from "react";
+import { useAuth } from "../auth/AuthProvider.jsx";
+import { addClientContact, addClientNote, assignClientUser, createClient, fetchClients } from "./clientApi.js";
+
+export function ClientsPage(){
+ const { accessToken }=useAuth();
+ const [clients,setClients]=useState([]); const [selected,setSelected]=useState(null); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
+ const [form,setForm]=useState({companyName:"",status:"active",retainerAmount:"",retainerCycle:"monthly"});
+ const [contact,setContact]=useState({name:"",email:"",roleTitle:""}); const [note,setNote]=useState(""); const [userId,setUserId]=useState("");
+ async function run(callback){setError("");setNotice("");try{await callback();}catch(err){setError(err.message);}}
+ async function load(){const data=await fetchClients(accessToken); setClients(data.clients);}
+ async function submit(event){event.preventDefault(); await run(async()=>{await createClient(accessToken,{...form,retainerAmount:form.retainerAmount || null}); setForm({companyName:"",status:"active",retainerAmount:"",retainerCycle:"monthly"}); await load();});}
+ return <main className="page-shell ops-page"><header className="page-header"><span>New-plan Day 3</span><h1>Client and Team Management</h1><p>Manage clients, contacts, internal notes, assignments, and client-safe visibility.</p></header>
+ <section className="ops-toolbar"><button onClick={()=>run(load)} type="button">Load clients</button></section>{error?<p className="auth-error keyword-error">{error}</p>:null}{notice?<p className="auth-notice keyword-error">{notice}</p>:null}
+ <section className="ops-layout"><form className="ops-panel" onSubmit={submit}><h2>Add Client</h2><input placeholder="Company" required value={form.companyName} onChange={(e)=>setForm({...form,companyName:e.target.value})}/><select value={form.status} onChange={(e)=>setForm({...form,status:e.target.value})}><option>active</option><option>paused</option><option>churned</option></select><input placeholder="Retainer" type="number" value={form.retainerAmount} onChange={(e)=>setForm({...form,retainerAmount:e.target.value})}/><input placeholder="Cycle" value={form.retainerCycle} onChange={(e)=>setForm({...form,retainerCycle:e.target.value})}/><button type="submit">Create</button></form>
+ <div className="ops-panel"><h2>Clients</h2>{clients.map((client)=><button className="row-button" key={client.id} onClick={()=>setSelected(client)} type="button"><strong>{client.companyName}</strong><span>{client.status} · health {client.healthScore}</span></button>)}</div>
+ <div className="ops-panel"><h2>Selected Client</h2>{selected?<><p>{selected.companyName}</p><input placeholder="Contact name" value={contact.name} onChange={(e)=>setContact({...contact,name:e.target.value})}/><input placeholder="Contact email" value={contact.email} onChange={(e)=>setContact({...contact,email:e.target.value})}/><input placeholder="Role" value={contact.roleTitle} onChange={(e)=>setContact({...contact,roleTitle:e.target.value})}/><button onClick={()=>run(async()=>{await addClientContact(accessToken,selected.id,contact);setNotice("Contact added");})} type="button">Add contact</button><textarea placeholder="Internal note" value={note} onChange={(e)=>setNote(e.target.value)}/><button onClick={()=>run(async()=>{await addClientNote(accessToken,selected.id,note);setNotice("Note added");})} type="button">Add note</button><input placeholder="Manager/employee user id" value={userId} onChange={(e)=>setUserId(e.target.value)}/><button onClick={()=>run(async()=>{await assignClientUser(accessToken,selected.id,userId);setNotice("User assigned");})} type="button">Assign user</button></>:<p>Select a client.</p>}</div></section></main>;
+}

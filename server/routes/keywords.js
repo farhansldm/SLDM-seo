@@ -24,6 +24,7 @@ const keywordSchema = z.object({
 const groupSchema = z.object({ name: z.string().min(1) });
 const importSchema = z.object({ csv: z.string().optional(), keywords: z.array(keywordSchema).optional() });
 const rankingsSchema = z.object({ days: z.coerce.number().refine((value) => value === 30 || value === 90).default(30) });
+const ideasSchema = z.object({ seed: z.string().min(1), location: z.string().optional() });
 
 function handleError(res, error) {
   const statusCode = error.statusCode ?? 500;
@@ -54,6 +55,16 @@ export function createKeywordRouter({
     }
   });
 
+
+  router.post("/keywords/research", canReadKeywords, async (req, res) => {
+    try {
+      const input = ideasSchema.parse(req.body);
+      return res.json(service.generateKeywordIdeas(input.seed, input.location));
+    } catch (error) {
+      if (error instanceof z.ZodError) return res.status(422).json({ error: "Invalid request", issues: error.issues });
+      return handleError(res, error);
+    }
+  });
   router.post("/websites/:websiteId/keyword-groups", canManageKeywords, async (req, res) => {
     try {
       const input = groupSchema.parse(req.body);
