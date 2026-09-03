@@ -6,6 +6,7 @@ import { ProtectedRoute } from "../features/auth/ProtectedRoute.jsx";
 import { DashboardPage } from "../features/dashboard/DashboardPage.jsx";
 import { KeywordPage } from "../features/keywords/KeywordPage.jsx";
 import { SeoDashboardPage } from "../features/seo-dashboard/SeoDashboardPage.jsx";
+import { TechnicalAuditPage } from "../features/audits/TechnicalAuditPage.jsx";
 
 export function App() {
   return (
@@ -33,6 +34,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <SeoDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/audits"
+          element={
+            <ProtectedRoute>
+              <TechnicalAuditPage />
             </ProtectedRoute>
           }
         />

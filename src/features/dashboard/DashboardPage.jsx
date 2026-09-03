@@ -39,6 +39,7 @@ export function DashboardPage() {
       <section className="quick-actions" aria-label="Day 3 actions">
         <Link to="/keywords">Open keyword tracking</Link>
         <Link to="/seo-dashboard">Open SEO dashboard</Link>
+        <Link to="/audits">Open technical audits</Link>
       </section>
     </main>
   );

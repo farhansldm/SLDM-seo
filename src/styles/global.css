@@ -539,3 +539,145 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+.audit-toolbar,
+.audit-summary,
+.comparison-strip,
+.audit-layout {
+  max-width: 1120px;
+  margin: 16px auto 0;
+}
+
+.audit-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.audit-toolbar label {
+  display: grid;
+  gap: 8px;
+  color: #3c4b55;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.audit-toolbar input {
+  min-height: 40px;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.audit-toolbar button,
+.audit-issues button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f6feb;
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 12px;
+}
+
+.audit-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.audit-summary article,
+.comparison-strip,
+.audit-history,
+.audit-issues {
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.audit-summary span {
+  display: block;
+  color: #6b7b88;
+  font-size: 12px;
+  margin-bottom: 6px;
+  text-transform: capitalize;
+}
+
+.audit-summary strong {
+  font-size: 26px;
+}
+
+.comparison-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.audit-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.audit-history h2,
+.audit-issues h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+.audit-history {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.audit-history button {
+  min-height: 72px;
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #f8fbfd;
+  color: #172026;
+  text-align: left;
+  padding: 10px;
+}
+
+.audit-history button strong,
+.audit-history button span {
+  display: block;
+}
+
+.audit-history button span {
+  color: #52616b;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.audit-issues {
+  overflow-x: auto;
+}
+
+.severity {
+  display: inline-flex;
+  min-width: 68px;
+  justify-content: center;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+  text-transform: capitalize;
+}
+
+.severity.critical { background: #b42318; }
+.severity.high { background: #b54708; }
+.severity.medium { background: #936300; }
+.severity.low { background: #12643f; }
+
+@media (max-width: 920px) {
+  .audit-toolbar,
+  .audit-summary,
+  .audit-layout {
+    grid-template-columns: 1fr;
+  }
+}
