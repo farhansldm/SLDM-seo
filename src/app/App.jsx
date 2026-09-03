@@ -5,6 +5,7 @@ import { LoginPage } from "../features/auth/LoginPage.jsx";
 import { ProtectedRoute } from "../features/auth/ProtectedRoute.jsx";
 import { DashboardPage } from "../features/dashboard/DashboardPage.jsx";
 import { KeywordPage } from "../features/keywords/KeywordPage.jsx";
+import { SeoDashboardPage } from "../features/seo-dashboard/SeoDashboardPage.jsx";
 
 export function App() {
   return (
@@ -24,6 +25,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <KeywordPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seo-dashboard"
+          element={
+            <ProtectedRoute>
+              <SeoDashboardPage />
             </ProtectedRoute>
           }
         />

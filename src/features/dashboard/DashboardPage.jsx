@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { productModules } from "../../../shared/modules.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
@@ -38,6 +38,7 @@ export function DashboardPage() {
 
       <section className="quick-actions" aria-label="Day 3 actions">
         <Link to="/keywords">Open keyword tracking</Link>
+        <Link to="/seo-dashboard">Open SEO dashboard</Link>
       </section>
     </main>
   );
