@@ -6,6 +6,7 @@
     "scripts":  {
                     "dev":  "vite",
                     "dev:api":  "node --watch server/index.js",
+                    "worker:audit":  "node server/workers/auditWorker.js",
                     "build":  "vite build",
                     "preview":  "vite preview",
                     "lint":  "eslint src server shared tests --ext .js,.jsx",

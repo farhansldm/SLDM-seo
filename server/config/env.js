@@ -10,6 +10,7 @@ const envSchema = z.object({
   SUPABASE_URL: z.string().url().default("https://example.supabase.co"),
   SUPABASE_ANON_KEY: z.string().min(1).default("test-anon-key"),
   REDIS_URL: z.string().default("redis://localhost:6379"),
+  JOB_MODE: z.enum(["inline", "redis"]).default("inline"),
   DATA_MODE: z.enum(["mock", "live"]).default("mock"),
 });
 

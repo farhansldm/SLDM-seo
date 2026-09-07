@@ -59,8 +59,7 @@ class MemoryAuditRepository {
     return null;
   }
 
-  async createCrawlRun(input) {
-    const startedAt = new Date(Date.now() + this.runs.length * 1000);
+  async createQueuedCrawlRun(input) {
     const run = {
       id: `run-${this.runs.length + 1}`,
       agencyId: input.agencyId,
@@ -68,25 +67,52 @@ class MemoryAuditRepository {
       websiteId: input.websiteId,
       source: input.source,
       triggeredBy: input.triggeredBy,
-      status: "completed",
-      startedAt,
-      completedAt: startedAt,
-      totalUrls: input.totalUrls,
+      status: "queued",
+      startedAt: null,
+      completedAt: null,
+      totalUrls: 0,
       website: this.websites.get(input.websiteId),
-      crawledUrls: input.crawledUrls.map((url, urlIndex) => ({
-        id: `url-${this.runs.length + 1}-${urlIndex}`,
-        ...url,
-        checks: url.checks.map((check, checkIndex) => ({ id: `check-${this.runs.length + 1}-${urlIndex}-${checkIndex}`, crawlRunId: `run-${this.runs.length + 1}`, ...check })),
-      })),
+      crawledUrls: [],
     };
     this.runs.push(run);
     return run;
   }
 
-  async createSeoAudit(input) {
+  async completeCrawlRun(input) {
+    const run = this.runs.find((item) => item.id === input.crawlRunId);
+    const completedAt = new Date();
+    Object.assign(run, {
+      status: "completed",
+      startedAt: completedAt,
+      completedAt,
+      totalUrls: input.crawledUrls.length,
+      crawledUrls: input.crawledUrls.map((url, urlIndex) => ({
+        id: `url-${this.runs.length + 1}-${urlIndex}`,
+        ...url,
+        checks: url.checks.map((check, checkIndex) => ({ id: `check-${run.id}-${urlIndex}-${checkIndex}`, crawlRunId: run.id, ...check })),
+      })),
+    });
     const audit = { id: `audit-${this.audits.length + 1}`, runAt: new Date(), ...input, issues: input.issues.map((issue, index) => ({ id: `issue-${index}`, ...issue })) };
     this.audits.push(audit);
-    return audit;
+    return { crawlRun: run, seoAudit: audit };
+  }
+
+  async failCrawlRun(crawlRunId) {
+    const run = this.runs.find((item) => item.id === crawlRunId);
+    Object.assign(run, { status: "failed", completedAt: new Date() });
+    return run;
+  }
+
+  async updateTechnicalCheck(checkId, data) {
+    const check = await this.findTechnicalCheck(checkId);
+    Object.assign(check, data);
+    for (const run of this.runs) {
+      for (const crawledUrl of run.crawledUrls) {
+        const stored = crawledUrl.checks.find((item) => item.id === checkId);
+        if (stored) Object.assign(stored, data);
+      }
+    }
+    return check;
   }
 
   async createTaskFromCheck(input) {
@@ -96,9 +122,9 @@ class MemoryAuditRepository {
   }
 }
 
-function makeApp(repository = new MemoryAuditRepository()) {
+function makeApp(repository = new MemoryAuditRepository(), options = {}) {
   return {
-    app: createApp({ userRepository: new MemoryUserRepository(), authProvider: new FakeSupabaseAuthProvider(), auditRepository: repository }),
+    app: createApp({ userRepository: new MemoryUserRepository(), authProvider: new FakeSupabaseAuthProvider(), auditRepository: repository, ...options }),
     repository,
   };
 }
@@ -128,6 +154,31 @@ describe("technical audit routes", () => {
     expect(history.body.runs).toHaveLength(2);
   });
 
+  it("persists a queued run before dispatching it to the Node worker", async () => {
+    const repository = new MemoryAuditRepository();
+    const jobs = [];
+    const auditDispatcher = { dispatch: async (job) => jobs.push(job) };
+    const { app } = makeApp(repository, { auditDispatcher });
+
+    const response = await request(app).post("/api/v1/websites/website-1/audits/run").set("Authorization", "Bearer manager-auth");
+
+    expect(response.status).toBe(202);
+    expect(response.body).toMatchObject({ queued: true, crawlRun: { status: "queued", totalUrls: 0 } });
+    expect(response.body.summary.score).toBeNull();
+    expect(jobs).toEqual([{ crawlRunId: response.body.crawlRun.id, websiteId: "website-1", triggeredBy: "user-2" }]);
+  });
+
+  it("marks the crawl run failed when queue dispatch fails", async () => {
+    const repository = new MemoryAuditRepository();
+    const auditDispatcher = { dispatch: async () => { throw new Error("Redis unavailable"); } };
+    const { app } = makeApp(repository, { auditDispatcher });
+
+    const response = await request(app).post("/api/v1/websites/website-1/audits/run").set("Authorization", "Bearer manager-auth");
+
+    expect(response.status).toBe(500);
+    expect(repository.runs[0].status).toBe("failed");
+  });
+
   it("creates a task from an audit issue", async () => {
     const setup = makeApp();
     const audit = await request(setup.app).post("/api/v1/websites/website-1/audits/run").set("Authorization", "Bearer manager-auth");
@@ -137,6 +188,27 @@ describe("technical audit routes", () => {
 
     expect(task.status).toBe(201);
     expect(task.body.task).toMatchObject({ category: "technical_seo", status: "todo", websiteId: "website-1" });
+  });
+
+  it("resolves and reopens an audit issue", async () => {
+    const setup = makeApp();
+    const audit = await request(setup.app).post("/api/v1/websites/website-1/audits/run").set("Authorization", "Bearer manager-auth");
+    const check = audit.body.crawlRun.crawledUrls.flatMap((url) => url.checks)[0];
+
+    const resolved = await request(setup.app)
+      .patch(`/api/v1/technical-checks/${check.id}/resolution`)
+      .set("Authorization", "Bearer manager-auth")
+      .send({ resolved: true });
+    const reopened = await request(setup.app)
+      .patch(`/api/v1/technical-checks/${check.id}/resolution`)
+      .set("Authorization", "Bearer manager-auth")
+      .send({ resolved: false });
+
+    expect(resolved.status).toBe(200);
+    expect(resolved.body.check).toMatchObject({ status: "resolved" });
+    expect(resolved.body.check.resolvedAt).toBeTruthy();
+    expect(reopened.status).toBe(200);
+    expect(reopened.body.check).toMatchObject({ status: "open", resolvedAt: null });
   });
 
   it("blocks clients from audit internals and blocks cross-tenant access", async () => {

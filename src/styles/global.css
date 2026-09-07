@@ -594,6 +594,18 @@ button:disabled {
   padding: 0 12px;
 }
 
+.audit-row-actions {
+  display: flex;
+  gap: 8px;
+  min-width: 190px;
+}
+
+.audit-row-actions button:first-child {
+  background: #ffffff;
+  border: 1px solid #9aa9b5;
+  color: #172026;
+}
+
 .audit-summary {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));

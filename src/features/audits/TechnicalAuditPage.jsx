@@ -1,7 +1,7 @@
 ﻿import { useState } from "react";
 
 import { useAuth } from "../auth/AuthProvider.jsx";
-import { createTaskFromCheck, fetchAuditRun, fetchAuditRuns, runTechnicalAudit } from "./auditApi.js";
+import { createTaskFromCheck, fetchAuditRun, fetchAuditRuns, runTechnicalAudit, setAuditCheckResolution } from "./auditApi.js";
 
 function flattenChecks(run) {
   return (run?.crawledUrls ?? []).flatMap((url) => (url.checks ?? []).map((check) => ({ ...check, url: url.url, statusCode: url.statusCode })));
@@ -43,6 +43,7 @@ export function TechnicalAuditPage() {
     if (!websiteId) throw new Error("Website ID is required");
     const response = await runTechnicalAudit({ accessToken, websiteId });
     setSelected(response);
+    if (response.queued) setNotice("Audit queued. Refresh history after the worker completes it.");
     const history = await fetchAuditRuns({ accessToken, websiteId });
     setRuns(history.runs);
   }
@@ -56,12 +57,19 @@ export function TechnicalAuditPage() {
     setNotice(`Created task: ${response.task.title}`);
   }
 
+  async function setResolution(checkId, resolved) {
+    await setAuditCheckResolution({ accessToken, checkId, resolved });
+    const crawlRunId = selected?.run?.id ?? selected?.crawlRun?.id;
+    if (crawlRunId) setSelected(await fetchAuditRun({ accessToken, crawlRunId }));
+    setNotice(resolved ? "Issue marked resolved." : "Issue reopened.");
+  }
+
   const checks = flattenChecks(selected?.run ?? selected?.crawlRun);
 
   return (
     <main className="page-shell audit-page">
       <header className="page-header">
-        <span>Day 5 technical audit</span>
+        <span>Day 7 technical audit</span>
         <h1>Technical SEO Audit Engine</h1>
         <p>Run mock crawls, inspect URL-level issues, compare crawl history, and convert audit findings into tasks.</p>
       </header>
@@ -82,7 +90,7 @@ export function TechnicalAuditPage() {
         {["score", "total", "critical", "high", "medium", "low"].map((key) => (
           <article key={key}>
             <span>{key === "score" ? "Score" : key}</span>
-            <strong>{key === "score" ? selected?.summary?.score ?? 0 : selected?.summary?.checks?.[key] ?? 0}</strong>
+            <strong>{key === "score" ? selected?.summary?.score ?? "-" : selected?.summary?.checks?.[key] ?? 0}</strong>
           </article>
         ))}
       </section>
@@ -111,7 +119,7 @@ export function TechnicalAuditPage() {
           <h2>Issues</h2>
           <table className="keyword-table">
             <thead>
-              <tr><th>Severity</th><th>Type</th><th>URL</th><th>Status</th><th>Recommendation</th><th>Action</th></tr>
+              <tr><th>Severity</th><th>Type</th><th>URL</th><th>Status</th><th>Recommendation</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {checks.map((check) => (
@@ -121,7 +129,12 @@ export function TechnicalAuditPage() {
                   <td>{check.url}</td>
                   <td>{check.status}</td>
                   <td>{check.recommendation}</td>
-                  <td><button onClick={() => action(() => createTask(check.id))} type="button">Create task</button></td>
+                  <td className="audit-row-actions">
+                    <button disabled={!check.id} onClick={() => action(() => setResolution(check.id, check.status !== "resolved"))} type="button">
+                      {check.status === "resolved" ? "Reopen" : "Resolve"}
+                    </button>
+                    <button disabled={!check.id} onClick={() => action(() => createTask(check.id))} type="button">Create task</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

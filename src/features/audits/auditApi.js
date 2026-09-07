@@ -35,3 +35,12 @@ export async function createTaskFromCheck({ accessToken, checkId }) {
   });
   return parseResponse(response);
 }
+
+export async function setAuditCheckResolution({ accessToken, checkId, resolved }) {
+  const response = await fetch(`${API_BASE_URL}/technical-checks/${checkId}/resolution`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ resolved }),
+  });
+  return parseResponse(response);
+}

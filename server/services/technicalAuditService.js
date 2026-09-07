@@ -117,7 +117,7 @@ function summarizeRun(run) {
     completedAt: run.completedAt,
     totalUrls: run.totalUrls,
     source: run.source,
-    score: scoreFromChecks(checks),
+    score: run.status === "completed" ? scoreFromChecks(checks) : null,
     checks: {
       total: checks.length,
       critical: checks.filter((check) => check.severity === "critical").length,
@@ -137,8 +137,9 @@ function assertWebsiteAccess(user, website) {
 }
 
 export class TechnicalAuditService {
-  constructor(repository) {
+  constructor(repository, auditDispatcher = null) {
     this.repository = repository;
+    this.auditDispatcher = auditDispatcher;
   }
 
   buildMockCrawl(domain) {
@@ -160,29 +161,50 @@ export class TechnicalAuditService {
   async runAudit(user, websiteId) {
     const website = await this.repository.findWebsiteById(websiteId);
     assertWebsiteAccess(user, website);
-    const crawledUrls = this.buildMockCrawl(website.domain);
-    const allChecks = crawledUrls.flatMap((url) => url.checks.map((check) => ({ ...check, affectedUrl: url.url })));
-    const score = scoreFromChecks(allChecks);
+    const crawlRun = await this.repository.createQueuedCrawlRun({
+      agencyId: website.client.agencyId,
+      clientId: website.clientId,
+      websiteId,
+      source: "mock",
+      triggeredBy: user.id,
+    });
+    const job = { crawlRunId: crawlRun.id, websiteId, triggeredBy: user.id };
 
-    const [crawlRun, seoAudit] = await Promise.all([
-      this.repository.createCrawlRun({
-        agencyId: website.client.agencyId,
-        clientId: website.clientId,
-        websiteId,
-        source: "mock",
-        triggeredBy: user.id,
-        totalUrls: crawledUrls.length,
-        crawledUrls,
-      }),
-      this.repository.createSeoAudit({
-        websiteId,
+    if (this.auditDispatcher) {
+      try {
+        await this.auditDispatcher.dispatch(job);
+        return { crawlRun, summary: summarizeRun(crawlRun), comparison: null, queued: true };
+      } catch (error) {
+        await this.repository.failCrawlRun(crawlRun.id);
+        throw error;
+      }
+    }
+
+    return this.processAuditJob(job, user);
+  }
+
+  async processAuditJob(job, user = null) {
+    const website = await this.repository.findWebsiteById(job.websiteId);
+    if (!website) throw new Error("Website not found for audit job");
+
+    try {
+      const crawledUrls = this.buildMockCrawl(website.domain);
+      const allChecks = crawledUrls.flatMap((url) => url.checks.map((check) => ({ ...check, affectedUrl: url.url })));
+      const score = scoreFromChecks(allChecks);
+      const { crawlRun, seoAudit } = await this.repository.completeCrawlRun({
+        crawlRunId: job.crawlRunId,
+        websiteId: job.websiteId,
         overallScore: score,
-        triggeredBy: user.id,
+        triggeredBy: job.triggeredBy,
+        crawledUrls,
         issues: allChecks.map((check) => toSeoIssue(check, check.affectedUrl)),
-      }),
-    ]);
-
-    return { crawlRun, seoAudit, summary: summarizeRun(crawlRun), comparison: await this.compareLatest(user, websiteId, crawlRun.id) };
+      });
+      const comparison = user ? await this.compareLatest(user, job.websiteId, crawlRun.id) : null;
+      return { crawlRun, seoAudit, summary: summarizeRun(crawlRun), comparison, queued: false };
+    } catch (error) {
+      await this.repository.failCrawlRun(job.crawlRunId);
+      throw error;
+    }
   }
 
   async listRuns(user, websiteId) {
@@ -199,7 +221,7 @@ export class TechnicalAuditService {
   }
 
   async compareLatest(user, websiteId, currentRunId = null) {
-    const runs = await this.repository.listCrawlRuns(websiteId);
+    const runs = (await this.repository.listCrawlRuns(websiteId)).filter((run) => run.status === "completed");
     const current = currentRunId ? runs.find((run) => run.id === currentRunId) : runs[0];
     const previous = runs.find((run) => run.id !== current?.id) ?? null;
     if (!current || !previous) return null;
@@ -226,5 +248,16 @@ export class TechnicalAuditService {
       priority,
     });
     return { task };
+  }
+
+  async setCheckResolution(user, checkId, resolved) {
+    const check = await this.repository.findTechnicalCheck(checkId);
+    const website = check?.crawledUrl?.crawlRun?.website;
+    assertWebsiteAccess(user, website);
+    const updated = await this.repository.updateTechnicalCheck(checkId, {
+      status: resolved ? "resolved" : "open",
+      resolvedAt: resolved ? new Date() : null,
+    });
+    return { check: updated };
   }
 }

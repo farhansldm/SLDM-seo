@@ -31,8 +31,7 @@ export class PrismaAuditRepository {
     });
   }
 
-  createCrawlRun({ agencyId, clientId, websiteId, source, triggeredBy, totalUrls, crawledUrls }) {
-    const now = new Date();
+  createQueuedCrawlRun({ agencyId, clientId, websiteId, source, triggeredBy }) {
     return this.client.crawlRun.create({
       data: {
         agencyId,
@@ -40,41 +39,58 @@ export class PrismaAuditRepository {
         websiteId,
         source,
         triggeredBy,
-        totalUrls,
-        status: "completed",
-        startedAt: now,
-        completedAt: now,
-        crawledUrls: {
-          create: crawledUrls.map((url) => ({
-            websiteId,
-            url: url.url,
-            statusCode: url.statusCode,
-            title: url.title,
-            metaDescription: url.metaDescription,
-            h1: url.h1,
-            canonicalUrl: url.canonicalUrl,
-            isIndexable: url.isIndexable,
-            wordCount: url.wordCount,
-            loadTimeMs: url.loadTimeMs,
-            depth: url.depth,
-            checks: { create: url.checks },
-          })),
-        },
+        status: "queued",
       },
       include: { crawledUrls: { include: { checks: true } } },
     });
   }
 
-  createSeoAudit({ websiteId, overallScore, triggeredBy, issues }) {
-    return this.client.seoAudit.create({
-      data: {
-        websiteId,
-        overallScore,
-        triggeredBy,
-        issues: { create: issues },
-      },
-      include: { issues: true },
+  completeCrawlRun({ crawlRunId, websiteId, overallScore, triggeredBy, crawledUrls, issues }) {
+    const now = new Date();
+    return this.client.$transaction(async (transaction) => {
+      await transaction.crawlRun.update({ where: { id: crawlRunId }, data: { status: "running", startedAt: now } });
+      const crawlRun = await transaction.crawlRun.update({
+        where: { id: crawlRunId },
+        data: {
+          status: "completed",
+          completedAt: now,
+          totalUrls: crawledUrls.length,
+          crawledUrls: {
+            create: crawledUrls.map((url) => ({
+              websiteId,
+              url: url.url,
+              statusCode: url.statusCode,
+              title: url.title,
+              metaDescription: url.metaDescription,
+              h1: url.h1,
+              canonicalUrl: url.canonicalUrl,
+              isIndexable: url.isIndexable,
+              wordCount: url.wordCount,
+              loadTimeMs: url.loadTimeMs,
+              depth: url.depth,
+              checks: { create: url.checks },
+            })),
+          },
+        },
+        include: { crawledUrls: { include: { checks: true } } },
+      });
+      const seoAudit = await transaction.seoAudit.create({
+        data: { websiteId, overallScore, triggeredBy, issues: { create: issues } },
+        include: { issues: true },
+      });
+      return { crawlRun, seoAudit };
     });
+  }
+
+  failCrawlRun(crawlRunId) {
+    return this.client.crawlRun.update({
+      where: { id: crawlRunId },
+      data: { status: "failed", completedAt: new Date() },
+    });
+  }
+
+  updateTechnicalCheck(checkId, data) {
+    return this.client.technicalCheck.update({ where: { id: checkId }, data });
   }
 
   createTaskFromCheck({ clientId, websiteId, createdBy, title, priority }) {
