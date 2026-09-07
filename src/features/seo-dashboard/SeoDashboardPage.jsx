@@ -38,7 +38,7 @@ export function SeoDashboardPage() {
   return (
     <main className="page-shell seo-page">
       <header className="page-header">
-        <span>Day 4 SEO command center</span>
+        <span>Day 6 performance command center</span>
         <h1>SEO Dashboard and Share of Voice</h1>
         <p>Review traffic, rankings, audit health, backlinks, tasks, top pages, and competitor visibility.</p>
       </header>
@@ -90,7 +90,22 @@ export function SeoDashboardPage() {
             </div>
 
             <div className="seo-panel">
-              <h2>Ranking Trend</h2>
+              <h2>Keyword Movement</h2>
+              <ResponsiveContainer height={240} width="100%">
+                <BarChart data={dashboard.trends.keywordMovement}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="improved" fill="#178a58" />
+                  <Bar dataKey="declined" fill="#b42318" />
+                  <Bar dataKey="unchanged" fill="#6b7b88" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="seo-panel">
+              <h2>Average Ranking Trend</h2>
               <ResponsiveContainer height={240} width="100%">
                 <LineChart data={dashboard.trends.ranking}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -131,7 +146,7 @@ export function SeoDashboardPage() {
 
           <section className="seo-grid lower">
             <div className="seo-panel">
-              <h2>Movement</h2>
+              <h2>Ranking Summary</h2>
               <div className="movement-list">
                 <span>Improved <strong>{kpis.rankingMovement.improved}</strong></span>
                 <span>Declined <strong>{kpis.rankingMovement.declined}</strong></span>
@@ -139,6 +154,26 @@ export function SeoDashboardPage() {
                 <span>Top 10 <strong>{kpis.rankingMovement.top10}</strong></span>
                 <span>Top 100 <strong>{kpis.rankingMovement.top100}</strong></span>
               </div>
+            </div>
+
+            <div className="seo-panel">
+              <h2>Top Ranking Keywords</h2>
+              <table className="keyword-table">
+                <thead>
+                  <tr><th>Keyword</th><th>Position</th><th>Change</th></tr>
+                </thead>
+                <tbody>
+                  {dashboard.topKeywords.map((keyword) => (
+                    <tr key={keyword.keyword}>
+                      <td>{keyword.keyword}</td>
+                      <td>{keyword.position}</td>
+                      <td className={keyword.change > 0 ? "metric-positive" : keyword.change < 0 ? "metric-negative" : ""}>
+                        {keyword.change > 0 ? `+${keyword.change}` : keyword.change}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             <div className="seo-panel">

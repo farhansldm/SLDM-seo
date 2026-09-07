@@ -38,7 +38,8 @@ export function App() {
               <WebsitesPage />
             </ProtectedRoute>
           }
-        />        <Route
+        />
+        <Route
           path="/keywords"
           element={
             <ProtectedRoute>

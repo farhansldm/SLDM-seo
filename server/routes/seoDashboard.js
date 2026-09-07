@@ -31,5 +31,21 @@ export function createSeoDashboardRouter({
     }
   });
 
+  router.get("/websites/:websiteId/seo-dashboard/summary", async (req, res) => {
+    try {
+      return res.json(await service.getWebsiteSummary(req.auth, req.params.websiteId));
+    } catch (error) {
+      return handleError(res, error);
+    }
+  });
+
+  router.get("/websites/:websiteId/seo-dashboard/traffic-trend", async (req, res) => {
+    try {
+      return res.json(await service.getTrafficTrend(req.auth, req.params.websiteId));
+    } catch (error) {
+      return handleError(res, error);
+    }
+  });
+
   return router;
 }

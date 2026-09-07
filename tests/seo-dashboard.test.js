@@ -38,6 +38,7 @@ class MemorySeoDashboardRepository {
       client: { id: "client-1", agencyId: "agency-1", companyName: "Example Co" },
       pageMetrics: [
         { url: "/", clicks: 80, impressions: 1000, ctr: 0.08, avgPosition: 12.4, organicSessions: 420, recordedAt: oldDate },
+        { url: "/", clicks: 40, impressions: 500, ctr: 0.08, avgPosition: 10, organicSessions: 190, recordedAt: newDate },
         { url: "/services", clicks: 120, impressions: 1500, ctr: 0.08, avgPosition: 8.7, organicSessions: 610, recordedAt: newDate },
       ],
       keywords: [
@@ -53,8 +54,8 @@ class MemorySeoDashboardRepository {
         { id: "task-2", title: "Publish page", status: "done", deadline: newDate },
       ],
       competitors: [
-        { name: "Competitor A", domain: "a.test", keywords: [{ rankPosition: 4 }, { rankPosition: 10 }] },
-        { name: "Competitor B", domain: "b.test", keywords: [{ rankPosition: 20 }, { rankPosition: 30 }] },
+        { name: "Competitor A", domain: "a.test", keywords: [{ keyword: "seo agency", rankPosition: 8, recordedAt: oldDate }, { keyword: "seo agency", rankPosition: 4, recordedAt: newDate }, { keyword: "rank tracking", rankPosition: 10, recordedAt: newDate }] },
+        { name: "Competitor B", domain: "b.test", keywords: [{ keyword: "seo agency", rankPosition: 20, recordedAt: newDate }, { keyword: "rank tracking", rankPosition: 30, recordedAt: newDate }] },
       ],
     };
   }
@@ -76,14 +77,35 @@ describe("SEO dashboard routes", () => {
 
     expect(response.status).toBe(200);
     expect(response.body.audience).toBe("internal");
-    expect(response.body.kpis).toMatchObject({ organicTraffic: 610, clicks: 120, impressions: 1500, seoScore: 84, backlinks: 2 });
+    expect(response.body.kpis).toMatchObject({ organicTraffic: 800, clicks: 160, impressions: 2000, seoScore: 84, backlinks: 2 });
     expect(response.body.kpis.rankingMovement).toMatchObject({ improved: 1, declined: 1, top10: 2 });
     expect(response.body.trends.traffic).toHaveLength(2);
     expect(response.body.trends.ranking).toHaveLength(2);
     expect(response.body.trends.distribution).toHaveLength(5);
+    expect(response.body.trends.keywordMovement).toEqual([
+      { date: "2026-08-30", improved: 1, declined: 1, unchanged: 0 },
+    ]);
     expect(response.body.topPages[0].url).toBe("/services");
+    expect(response.body.topPages).toHaveLength(2);
+    expect(response.body.topKeywords[0]).toMatchObject({ keyword: "seo agency", position: 7, change: 5 });
     expect(response.body.shareOfVoice.length).toBe(3);
     expect(response.body.operations.openTasks).toHaveLength(1);
+  });
+
+  it("provides dedicated scoped summary and traffic trend endpoints", async () => {
+    const app = makeApp();
+    const [summary, traffic] = await Promise.all([
+      request(app).get("/api/v1/websites/website-1/seo-dashboard/summary").set("Authorization", "Bearer manager-auth"),
+      request(app).get("/api/v1/websites/website-1/seo-dashboard/traffic-trend").set("Authorization", "Bearer client-auth"),
+    ]);
+
+    expect(summary.status).toBe(200);
+    expect(summary.body.kpis.organicTraffic).toBe(800);
+    expect(summary.body.trends).toBeUndefined();
+    expect(traffic.status).toBe(200);
+    expect(traffic.body.audience).toBe("client");
+    expect(traffic.body.traffic.at(-1)).toMatchObject({ clicks: 160, impressions: 2000, organicTraffic: 800 });
+    expect(traffic.body.operations).toBeUndefined();
   });
 
   it("returns a client-safe dashboard without internal operations data", async () => {

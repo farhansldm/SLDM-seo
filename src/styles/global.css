@@ -531,6 +531,20 @@ button:disabled {
   padding-bottom: 8px;
 }
 
+.metric-positive {
+  color: #12643f;
+  font-weight: 700;
+}
+
+.metric-negative {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.seo-grid.lower {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 920px) {
   .seo-toolbar,
   .seo-kpis,

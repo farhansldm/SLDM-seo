@@ -23,6 +23,18 @@ function aggregateByDate(items, dateKey, mapper) {
   return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, value]) => ({ date, ...value }));
 }
 
+function latestPerKey(items, keySelector, dateKey) {
+  const latest = new Map();
+  items.forEach((item) => {
+    const key = keySelector(item);
+    const current = latest.get(key);
+    if (!current || new Date(item[dateKey]) > new Date(current[dateKey])) {
+      latest.set(key, item);
+    }
+  });
+  return [...latest.values()];
+}
+
 function latestRank(keyword) {
   return [...(keyword.rankings ?? [])].sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt)).at(-1) ?? null;
 }
@@ -48,6 +60,31 @@ function keywordMovement(keywords) {
   };
 }
 
+function keywordMovementTrend(keywords) {
+  const totalsByDate = new Map();
+
+  keywords.forEach((keyword) => {
+    const rankings = [...(keyword.rankings ?? [])]
+      .filter((ranking) => ranking.rankPosition != null)
+      .sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+
+    rankings.forEach((ranking, index) => {
+      if (index === 0) return;
+      const previous = rankings[index - 1];
+      const date = new Date(ranking.recordedAt).toISOString().slice(0, 10);
+      const totals = totalsByDate.get(date) ?? { improved: 0, declined: 0, unchanged: 0 };
+      if (ranking.rankPosition < previous.rankPosition) totals.improved += 1;
+      else if (ranking.rankPosition > previous.rankPosition) totals.declined += 1;
+      else totals.unchanged += 1;
+      totalsByDate.set(date, totals);
+    });
+  });
+
+  return [...totalsByDate.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, totals]) => ({ date, ...totals }));
+}
+
 function keywordDistribution(keywords) {
   const latest = keywords.map((keyword) => latestRank(keyword)?.rankPosition).filter(Boolean);
   return [
@@ -70,11 +107,59 @@ function buildShareOfVoice(website) {
   const competitorScores = (website.competitors ?? []).map((competitor) => ({
     name: competitor.name ?? competitor.domain,
     domain: competitor.domain,
-    score: visibilityScoreFromRanks((competitor.keywords ?? []).map((keyword) => keyword.rankPosition).filter(Boolean)),
+    score: visibilityScoreFromRanks(
+      latestPerKey(competitor.keywords ?? [], (keyword) => keyword.keyword.toLowerCase(), "recordedAt")
+        .map((keyword) => keyword.rankPosition)
+        .filter(Boolean),
+    ),
   }));
   const entries = [{ name: website.domain, domain: website.domain, score: clientScore }, ...competitorScores];
   const total = entries.reduce((sum, entry) => sum + entry.score, 0) || 1;
   return entries.map((entry) => ({ ...entry, share: Math.round((entry.score / total) * 1000) / 10 }));
+}
+
+function buildTrafficTrend(pageMetrics) {
+  return aggregateByDate(pageMetrics, "recordedAt", (current, metric) => ({
+    clicks: (current.clicks ?? 0) + (metric.clicks ?? 0),
+    impressions: (current.impressions ?? 0) + (metric.impressions ?? 0),
+    organicTraffic: (current.organicTraffic ?? 0) + (metric.organicSessions ?? 0),
+    weightedPosition: (current.weightedPosition ?? 0) + Number(metric.avgPosition ?? 0) * Number(metric.impressions ?? 0),
+  })).map((row) => ({
+    date: row.date,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    organicTraffic: row.organicTraffic,
+    ctr: row.impressions ? row.clicks / row.impressions : 0,
+    averagePosition: row.impressions ? Math.round((row.weightedPosition / row.impressions) * 10) / 10 : 0,
+  }));
+}
+
+function buildTopPages(pageMetrics) {
+  return latestPerKey(pageMetrics, (metric) => metric.url, "recordedAt")
+    .sort((a, b) => (b.organicSessions ?? b.clicks ?? 0) - (a.organicSessions ?? a.clicks ?? 0))
+    .slice(0, 5)
+    .map((metric) => ({
+      url: metric.url,
+      clicks: metric.clicks ?? 0,
+      impressions: metric.impressions ?? 0,
+      organicTraffic: metric.organicSessions ?? 0,
+    }));
+}
+
+function buildTopKeywords(keywords) {
+  return keywords
+    .map((keyword) => {
+      const latest = latestRank(keyword)?.rankPosition ?? null;
+      const previous = previousRank(keyword)?.rankPosition ?? null;
+      return {
+        keyword: keyword.keyword,
+        position: latest,
+        change: latest != null && previous != null ? previous - latest : 0,
+      };
+    })
+    .filter((keyword) => keyword.position != null)
+    .sort((a, b) => a.position - b.position)
+    .slice(0, 10);
 }
 
 function buildFreshness(website) {
@@ -101,7 +186,8 @@ export class SeoDashboardService {
     const website = await this.repository.findWebsiteDashboard(websiteId);
     assertWebsiteAccess(user, website);
 
-    const latestMetric = latestByDate(website.pageMetrics, "recordedAt") ?? {};
+    const trafficTrend = buildTrafficTrend(website.pageMetrics);
+    const latestMetric = trafficTrend.at(-1) ?? {};
     const latestAudit = latestByDate(website.audits, "runAt") ?? { issues: [] };
     const movement = keywordMovement(website.keywords);
     const openTasks = website.tasks.filter((task) => task.status !== "done");
@@ -115,11 +201,11 @@ export class SeoDashboardService {
       client: { id: website.client.id, companyName: website.client.companyName },
       freshness: buildFreshness(website),
       kpis: {
-        organicTraffic: latestMetric.organicSessions ?? 0,
+        organicTraffic: latestMetric.organicTraffic ?? 0,
         clicks: latestMetric.clicks ?? 0,
         impressions: latestMetric.impressions ?? 0,
         ctr: Number(latestMetric.ctr ?? 0),
-        averagePosition: Number(latestMetric.avgPosition ?? 0),
+        averagePosition: Number(latestMetric.averagePosition ?? 0),
         seoScore: website.seoScore ?? latestAudit.overallScore ?? 0,
         rankingMovement: movement,
         auditHealth: { openIssues: issueCount, criticalIssues, score: latestAudit.overallScore ?? website.seoScore ?? 0 },
@@ -127,23 +213,17 @@ export class SeoDashboardService {
         tasks: { open: openTasks.length, overdue: overdueTasks.length, completed: website.tasks.filter((task) => task.status === "done").length },
       },
       trends: {
-        traffic: aggregateByDate(website.pageMetrics, "recordedAt", (current, metric) => ({
-          clicks: (current.clicks ?? 0) + (metric.clicks ?? 0),
-          impressions: (current.impressions ?? 0) + (metric.impressions ?? 0),
-          organicTraffic: (current.organicTraffic ?? 0) + (metric.organicSessions ?? 0),
-        })),
+        traffic: trafficTrend,
         ranking: aggregateByDate(
           website.keywords.flatMap((keyword) => keyword.rankings),
           "recordedAt",
           (current, ranking) => ({ total: (current.total ?? 0) + ranking.rankPosition, count: (current.count ?? 0) + 1 }),
         ).map((row) => ({ date: row.date, averagePosition: Math.round((row.total / row.count) * 10) / 10 })),
         distribution: keywordDistribution(website.keywords),
+        keywordMovement: keywordMovementTrend(website.keywords),
       },
-      topPages: website.pageMetrics
-        .filter((metric) => metric.url)
-        .sort((a, b) => (b.organicSessions ?? b.clicks ?? 0) - (a.organicSessions ?? a.clicks ?? 0))
-        .slice(0, 5)
-        .map((metric) => ({ url: metric.url, clicks: metric.clicks ?? 0, impressions: metric.impressions ?? 0, organicTraffic: metric.organicSessions ?? 0 })),
+      topPages: buildTopPages(website.pageMetrics),
+      topKeywords: buildTopKeywords(website.keywords),
       shareOfVoice: buildShareOfVoice(website),
       audience: safeForClient ? "client" : "internal",
     };
@@ -156,5 +236,26 @@ export class SeoDashboardService {
     }
 
     return dashboard;
+  }
+
+  async getWebsiteSummary(user, websiteId) {
+    const dashboard = await this.getWebsiteDashboard(user, websiteId);
+    return {
+      website: dashboard.website,
+      client: dashboard.client,
+      freshness: dashboard.freshness,
+      kpis: dashboard.kpis,
+      audience: dashboard.audience,
+    };
+  }
+
+  async getTrafficTrend(user, websiteId) {
+    const dashboard = await this.getWebsiteDashboard(user, websiteId);
+    return {
+      website: dashboard.website,
+      freshness: dashboard.freshness,
+      traffic: dashboard.trends.traffic,
+      audience: dashboard.audience,
+    };
   }
 }
