@@ -9,6 +9,7 @@ import { WebsitesPage } from "../features/websites/WebsitesPage.jsx";
 import { KeywordPage } from "../features/keywords/KeywordPage.jsx";
 import { SeoDashboardPage } from "../features/seo-dashboard/SeoDashboardPage.jsx";
 import { TechnicalAuditPage } from "../features/audits/TechnicalAuditPage.jsx";
+import { TasksPage } from "../features/tasks/TasksPage.jsx";
 
 export function App() {
   return (
@@ -60,6 +61,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <TechnicalAuditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <TasksPage />
             </ProtectedRoute>
           }
         />

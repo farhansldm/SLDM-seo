@@ -42,6 +42,7 @@ export function DashboardPage() {
         <Link to="/keywords">Open keyword tracking</Link>
         <Link to="/seo-dashboard">Open SEO dashboard</Link>
         <Link to="/audits">Open technical audits</Link>
+        <Link to="/tasks">Open task workflow</Link>
       </section>
     </main>
   );

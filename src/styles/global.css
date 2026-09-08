@@ -794,3 +794,236 @@ button:disabled {
   .ops-layout { grid-template-columns: 1fr; }
   .ops-toolbar { display: grid; }
 }
+
+.task-tabs,
+.task-layout,
+.workload-grid,
+.task-inbox {
+  max-width: 1120px;
+  margin: 16px auto 0;
+}
+
+.task-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.task-tabs button,
+.task-form button,
+.task-detail button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172026;
+  font-weight: 700;
+  padding: 0 13px;
+}
+
+.task-tabs button[aria-pressed="true"],
+.task-form button,
+.task-detail button:not(.danger-button) {
+  border-color: #1f6feb;
+  background: #1f6feb;
+  color: #ffffff;
+}
+
+.task-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(340px, 1fr) 320px;
+  gap: 12px;
+  align-items: start;
+}
+
+.task-form,
+.task-list,
+.task-detail,
+.workload-grid article,
+.task-inbox > div {
+  border: 1px solid #dbe3ea;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.task-form,
+.task-detail {
+  display: grid;
+  gap: 10px;
+}
+
+.task-form h2,
+.task-list h2,
+.task-detail h2,
+.task-inbox h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+
+.task-form input,
+.task-form select,
+.task-detail input,
+.task-detail select,
+.task-detail textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid #cbd6df;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172026;
+  padding: 9px 10px;
+}
+
+.task-detail label {
+  display: grid;
+  gap: 6px;
+  color: #52616b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.task-detail textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.task-list {
+  display: grid;
+  gap: 8px;
+}
+
+.task-list-row {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: 64px minmax(150px, 1fr) 110px 90px 150px;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e0e7ed;
+  border-radius: 6px;
+  background: #f8fbfd;
+  color: #172026;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.task-list-row span {
+  color: #52616b;
+  font-size: 12px;
+}
+
+.priority {
+  display: inline-flex;
+  justify-content: center;
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.priority-high,
+.priority-urgent { color: #b42318 !important; background: #fff1f0; }
+.priority-medium { color: #936300 !important; background: #fff8db; }
+.priority-low { color: #12643f !important; background: #eaf7f0; }
+
+.task-comments {
+  max-height: 180px;
+  overflow-y: auto;
+  border-top: 1px solid #e3e9ef;
+  border-bottom: 1px solid #e3e9ef;
+}
+
+.task-comments p {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 9px 0;
+}
+
+.task-comments strong {
+  font-size: 12px;
+}
+
+.task-detail .danger-button {
+  border-color: #b42318;
+  color: #b42318;
+}
+
+.workload-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workload-grid article > strong,
+.workload-grid article > span {
+  display: block;
+}
+
+.workload-grid article > span {
+  margin-top: 4px;
+  color: #52616b;
+  text-transform: capitalize;
+}
+
+.workload-grid dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 7px;
+  margin-bottom: 0;
+}
+
+.workload-grid dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.task-inbox {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.task-inbox > div {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.task-inbox button {
+  min-height: 42px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #dbe3ea;
+  border-radius: 6px;
+  background: #f2f7fb;
+  color: #172026;
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.task-inbox button.read {
+  background: #ffffff;
+  color: #6b7b88;
+}
+
+@media (max-width: 1050px) {
+  .task-layout { grid-template-columns: 1fr; }
+  .task-list-row { grid-template-columns: 64px minmax(140px, 1fr) 100px 90px; }
+  .task-list-row span:last-child { grid-column: 2 / -1; }
+}
+
+@media (max-width: 720px) {
+  .task-list-row { grid-template-columns: 64px minmax(0, 1fr); }
+  .task-list-row span { grid-column: 2; }
+  .workload-grid,
+  .task-inbox { grid-template-columns: 1fr; }
+}
