@@ -10,6 +10,8 @@ import { KeywordPage } from "../features/keywords/KeywordPage.jsx";
 import { SeoDashboardPage } from "../features/seo-dashboard/SeoDashboardPage.jsx";
 import { TechnicalAuditPage } from "../features/audits/TechnicalAuditPage.jsx";
 import { TasksPage } from "../features/tasks/TasksPage.jsx";
+import { ClientPortalPage } from "../features/reports/ClientPortalPage.jsx";
+import { ReportsPage } from "../features/reports/ReportsPage.jsx";
 
 export function App() {
   return (
@@ -72,6 +74,8 @@ export function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+        <Route path="/portal" element={<ProtectedRoute><ClientPortalPage /></ProtectedRoute>} />
       </Routes>
     </AuthProvider>
   );

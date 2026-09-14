@@ -43,6 +43,8 @@ export function DashboardPage() {
         <Link to="/seo-dashboard">Open SEO dashboard</Link>
         <Link to="/audits">Open technical audits</Link>
         <Link to="/tasks">Open task workflow</Link>
+        {user?.role === "client" ? <Link to="/portal">Open client portal</Link> : null}
+        {["admin", "manager"].includes(user?.role) ? <Link to="/reports">Open reports</Link> : null}
       </section>
     </main>
   );

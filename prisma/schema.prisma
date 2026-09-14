@@ -535,16 +535,22 @@ model RecurringTask {
 model Report {
   id          String   @id @default(uuid())
   clientId    String
+  title       String?
   periodStart DateTime?
   periodEnd   DateTime?
   pdfUrl      String?
   summary     String?
+  reportData  Json     @default("{}")
   status      String   @default("draft")
   generatedBy String?
+  approvedBy  String?
+  approvedAt  DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId, createdAt])
+  @@index([clientId, status])
 }
 
 model ReportTemplate {

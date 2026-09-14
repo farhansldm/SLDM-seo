@@ -9,6 +9,7 @@ import { createAuditRouter } from "./routes/audits.js";
 import { createClientRouter } from "./routes/clients.js";
 import { createWebsiteRouter } from "./routes/websites.js";
 import { createTaskRouter } from "./routes/tasks.js";
+import { createReportRouter } from "./routes/reports.js";
 
 export function createApp(options = {}) {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp(options = {}) {
   app.use("/api/v1", createSeoDashboardRouter(options));
   app.use("/api/v1", createAuditRouter(options));
   app.use("/api/v1", createTaskRouter(options));
+  app.use("/api/v1", createReportRouter(options));
 
   app.use((req, res) => {
     res.status(404).json({ error: "Not found", path: req.path });

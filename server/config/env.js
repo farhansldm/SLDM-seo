@@ -12,6 +12,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().default("redis://localhost:6379"),
   JOB_MODE: z.enum(["inline", "redis"]).default("inline"),
   DATA_MODE: z.enum(["mock", "live"]).default("mock"),
+  REPORT_STORAGE_DIR: z.string().default("storage/reports"),
+  PUPPETEER_EXECUTABLE_PATH: z.preprocess((value) => value === "" ? undefined : value, z.string().optional()),
 });
 
 export const env = envSchema.parse(process.env);

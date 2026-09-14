@@ -8,6 +8,7 @@ coverage/
 .vite/
 .output/
 *.log
+storage/reports/
 .DS_Store
 Thumbs.db
 .vscode/
