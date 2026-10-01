@@ -17,11 +17,11 @@ class MemoryUserRepository {
       ["other-auth", { id: "manager-9", agencyId: "agency-9", email: "other@test.dev", isActive: true, role: { name: roles.MANAGER }, assignments: [{ clientId: "client-9" }] }],
     ]);
   }
-  async findUserByAuthToken(id) { return this.users.get(id) ?? null; }
+  async findUserBySupabaseAuthId(id) { return this.users.get(id) ?? null; }
 }
 
 class FakeAuthProvider {
-  async verifySessionToken(token) { return { id: token }; }
+  async verifyAccessToken(token) { return { id: token }; }
 }
 
 function researchClient() {
@@ -77,7 +77,7 @@ class FakeAiProvider {
 
 function makeApp({ repository = new MemoryAiRepository(), provider = new FakeAiProvider(), limiter } = {}) {
   return {
-    app: createApp({ userRepository: new MemoryUserRepository(), sessionProvider: new FakeAuthProvider(), aiRepository: repository, aiProvider: provider, aiRateLimiter: limiter }),
+    app: createApp({ userRepository: new MemoryUserRepository(), authProvider: new FakeAuthProvider(), aiRepository: repository, aiProvider: provider, aiRateLimiter: limiter }),
     repository,
     provider,
   };

@@ -1,7 +1,7 @@
 ﻿import { Router } from "express";
 import { z } from "zod";
 
-import { DatabaseSessionProvider } from "../auth/session.js";
+import { SupabaseAuthProvider } from "../auth/supabase.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaUserRepository } from "../repositories/userRepository.js";
@@ -14,12 +14,12 @@ const websiteSchema = z.object({
 const competitorSchema = z.object({ domain: z.string().min(3), name: z.string().nullable().optional(), notes: z.string().nullable().optional(), priority: z.string().default("medium"), source: z.string().default("manual") });
 function handleError(res, error){ const statusCode=error.statusCode ?? 500; return res.status(statusCode).json({ error: statusCode===500 ? "Internal server error" : error.message }); }
 
-export function createWebsiteRouter({ userRepository = new PrismaUserRepository(), websiteRepository = new PrismaWebsiteRepository(), sessionProvider = new DatabaseSessionProvider(userRepository), websiteService } = {}) {
+export function createWebsiteRouter({ userRepository = new PrismaUserRepository(), websiteRepository = new PrismaWebsiteRepository(), authProvider = new SupabaseAuthProvider(), websiteService } = {}) {
   const router = Router();
   const service = websiteService ?? new WebsiteService(websiteRepository);
   const canRead = requireAnyPermission("website:manage_all", "website:manage_assigned", "website:view_assigned", "website:view_own_safe");
   const canManage = requireAnyPermission("website:manage_all", "website:manage_assigned");
-  router.use(authenticate(userRepository, sessionProvider));
+  router.use(authenticate(userRepository, authProvider));
 
   router.get("/clients/:clientId/websites", canRead, async (req,res)=>{ try{return res.json(await service.listWebsites(req.auth, req.params.clientId));}catch(error){return handleError(res,error);} });
   router.post("/clients/:clientId/websites", canManage, async (req,res)=>{ try{return res.status(201).json(await service.createWebsite(req.auth, req.params.clientId, websiteSchema.parse(req.body)));}catch(error){if(error instanceof z.ZodError)return res.status(422).json({error:"Invalid request",issues:error.issues});return handleError(res,error);} });

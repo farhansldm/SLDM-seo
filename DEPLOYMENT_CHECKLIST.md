@@ -6,15 +6,17 @@
 - [ ] Serve `dist/` through the hosting web server and proxy `/api/v1` to the Node.js API.
 - [ ] Use Node.js 22 LTS or newer and install production dependencies with the lockfile.
 - [ ] Set `NODE_ENV=production`, HTTPS, a real public API URL, and the exact production origin in `CORS_ORIGINS`.
-- [ ] Keep the API, PostgreSQL database, and optional Redis service in compatible regions.
+- [ ] Keep the API, Supabase project, and optional Redis service in compatible regions.
 
 ## Data And Auth
 
-- [ ] Provision PostgreSQL and set `DATABASE_URL` with a least-privilege application user.
-- [ ] Back up PostgreSQL before deployment and configure automated daily backups with a tested restore procedure.
+- [ ] Create the Supabase project and set its pooled connection as `DATABASE_URL`; use its direct connection for migrations where available.
+- [ ] Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY`; the anon key is designed for browser use, but never expose the service-role key.
+- [ ] Configure Supabase Auth site URL, allowed redirect URLs, email confirmation, password policy, and production email delivery.
+- [ ] Enable Supabase backups appropriate to the project tier and test restoration before launch.
 - [ ] Run `npm run prisma:validate`, `npm run prisma:generate`, and `npx prisma migrate deploy` against staging.
-- [ ] For migrated users, set `AUTH_USER_EMAIL` and `AUTH_USER_PASSWORD`, run `npm run auth:set-password`, then remove those temporary environment values.
-- [ ] Configure secure PostgreSQL-backed session settings and verify login cookies are `Secure`, `HttpOnly`, and `SameSite=Strict` over HTTPS.
+- [ ] Create or invite migrated users in Supabase Auth and link each application profile using its Auth user UUID in `User.supabaseAuthId`.
+- [ ] Verify Supabase access-token refresh, email confirmation, logout, and protected API bearer-token rejection.
 - [ ] Verify Admin, Manager, Employee, and Client access using separate staging accounts.
 - [ ] Confirm tenant-isolation tests pass before every production migration.
 

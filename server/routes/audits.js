@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { DatabaseSessionProvider } from "../auth/session.js";
+import { SupabaseAuthProvider } from "../auth/supabase.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaAuditRepository } from "../repositories/auditRepository.js";
@@ -18,7 +18,7 @@ function handleError(res, error) {
 export function createAuditRouter({
   userRepository = new PrismaUserRepository(),
   auditRepository = new PrismaAuditRepository(),
-  sessionProvider = new DatabaseSessionProvider(userRepository),
+  authProvider = new SupabaseAuthProvider(),
   auditDispatcher,
   technicalAuditService,
 } = {}) {
@@ -28,7 +28,7 @@ export function createAuditRouter({
   const canRunAudits = requireAnyPermission("audit:manage_all", "audit:manage_assigned");
   const canCreateTasks = requireAnyPermission("task:manage_all", "task:assign_assigned", "task:update_assigned");
 
-  router.use(authenticate(userRepository, sessionProvider));
+  router.use(authenticate(userRepository, authProvider));
 
   router.get("/websites/:websiteId/audits", canViewAudits, async (req, res) => {
     try {

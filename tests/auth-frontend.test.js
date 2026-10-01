@@ -1,21 +1,23 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getCurrentUser, signIn, signOut, signUp } from "../src/features/auth/authApi.js";
+vi.mock("../src/features/auth/supabaseClient.js", () => ({
+  supabase: { auth: { getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: "supabase-token" } }, error: null }) } },
+}));
+
+import { bootstrapAgencyAdmin, getCurrentUser } from "../src/features/auth/authApi.js";
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("cookie session frontend client", () => {
-  it("uses credentials for signup, login, current session, and logout", async () => {
+describe("Supabase frontend API client", () => {
+  it("uses the current Supabase bearer token for bootstrap and profile requests", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ user: { id: "user-1" } }) });
     vi.stubGlobal("fetch", fetchMock);
-    await signUp({ agencyName: "Agency", fullName: "Admin", email: "admin@test.dev", password: "Strong password 2026!" });
-    await signIn({ email: "admin@test.dev", password: "Strong password 2026!" });
-    await getCurrentUser();
-    await signOut();
 
-    expect(fetchMock).toHaveBeenCalledTimes(4);
-    fetchMock.mock.calls.forEach(([, options]) => expect(options.credentials).toBe("include"));
-    expect(fetchMock.mock.calls[0][1].headers).not.toHaveProperty("Authorization");
-    expect(fetchMock.mock.calls[3][1].method).toBe("POST");
+    await bootstrapAgencyAdmin({ agencyName: "Agency", fullName: "Admin" });
+    await getCurrentUser();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe("Bearer supabase-token");
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe("Bearer supabase-token");
   });
 });

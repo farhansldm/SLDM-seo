@@ -1,13 +1,12 @@
 ﻿import { prisma } from "../server/db/prisma.js";
 import { roles } from "../shared/permissions.js";
-import { hashPassword } from "../server/auth/password.js";
 
 async function main() {
-  if (!process.env.DEMO_ADMIN_PASSWORD) throw new Error("DEMO_ADMIN_PASSWORD is required for demo seeding");
+  if (!process.env.DEMO_SUPABASE_AUTH_ID) throw new Error("DEMO_SUPABASE_AUTH_ID is required for demo seeding");
   await Promise.all(Object.values(roles).map((name) => prisma.role.upsert({ where: { name }, update: {}, create: { name } })));
   const adminRole = await prisma.role.findUnique({ where: { name: roles.ADMIN } });
   const agency = await prisma.agency.create({ data: { name: "SLDM Demo Agency" } });
-  await prisma.user.create({ data: { agencyId: agency.id, roleId: adminRole.id, email: "admin.demo@sldm.test", fullName: "Demo Admin", credential: { create: { passwordHash: await hashPassword(process.env.DEMO_ADMIN_PASSWORD) } } } });
+  await prisma.user.create({ data: { agencyId: agency.id, roleId: adminRole.id, email: "admin.demo@sldm.test", fullName: "Demo Admin", supabaseAuthId: process.env.DEMO_SUPABASE_AUTH_ID } });
   const client = await prisma.client.create({ data: { agencyId: agency.id, companyName: "Northstar Dental", status: "active", retainerAmount: 2500, retainerCycle: "monthly" } });
   await prisma.clientContact.create({ data: { clientId: client.id, name: "Riya Sharma", email: "riya@example.com", roleTitle: "Marketing Lead", isPrimary: true } });
   const website = await prisma.website.create({ data: { clientId: client.id, domain: "northstardental.example", cms: "WordPress", businessCategory: "Dental Clinic", targetLocations: ["Mumbai", "Pune"], targetSearchEngines: ["google", "bing"], preferredLocale: "en-IN", primaryCountry: "India", isMock: true } });

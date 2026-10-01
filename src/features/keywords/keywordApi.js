@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../../lib/apiClient.js";
+import { API_BASE_URL, apiRequest, getAuthHeaders } from "../../lib/apiClient.js";
 
 function buildQuery(filters) {
   const params = new URLSearchParams();
@@ -16,7 +16,7 @@ export const generateRankings = ({ websiteId, days }) => apiRequest(`/websites/$
 
 export async function exportKeywords({ websiteId, filters }) {
   const query = buildQuery(filters);
-  const response = await fetch(`${API_BASE_URL}/websites/${websiteId}/keywords/export${query ? `?${query}` : ""}`, { credentials: "include" });
+  const response = await fetch(`${API_BASE_URL}/websites/${websiteId}/keywords/export${query ? `?${query}` : ""}`, { headers: await getAuthHeaders() });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new Error(payload.error ?? "Export failed");

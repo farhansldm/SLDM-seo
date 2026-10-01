@@ -1,4 +1,4 @@
-import { API_BASE_URL, apiRequest } from "../../lib/apiClient.js";
+import { API_BASE_URL, apiRequest, getAuthHeaders } from "../../lib/apiClient.js";
 
 export const fetchReports = () => apiRequest("/reports");
 export const fetchReport = (id) => apiRequest(`/reports/${id}`);
@@ -8,7 +8,7 @@ export const approveReport = (id) => apiRequest(`/reports/${id}/approve`, { meth
 export const fetchPortalDashboard = () => apiRequest("/portal/dashboard");
 
 export async function downloadReportPdf(id, title = "seo-report") {
-  const response = await fetch(`${API_BASE_URL}/reports/${id}/download`, { credentials: "include" });
+  const response = await fetch(`${API_BASE_URL}/reports/${id}/download`, { headers: await getAuthHeaders() });
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
     throw new Error(payload.error ?? "PDF download failed");

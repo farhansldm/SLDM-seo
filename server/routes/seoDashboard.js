@@ -1,6 +1,6 @@
 ﻿import { Router } from "express";
 
-import { DatabaseSessionProvider } from "../auth/session.js";
+import { SupabaseAuthProvider } from "../auth/supabase.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { PrismaSeoDashboardRepository } from "../repositories/seoDashboardRepository.js";
 import { PrismaUserRepository } from "../repositories/userRepository.js";
@@ -15,13 +15,13 @@ function handleError(res, error) {
 export function createSeoDashboardRouter({
   userRepository = new PrismaUserRepository(),
   seoDashboardRepository = new PrismaSeoDashboardRepository(),
-  sessionProvider = new DatabaseSessionProvider(userRepository),
+  authProvider = new SupabaseAuthProvider(),
   seoDashboardService,
 } = {}) {
   const router = Router();
   const service = seoDashboardService ?? new SeoDashboardService(seoDashboardRepository);
 
-  router.use(authenticate(userRepository, sessionProvider));
+  router.use(authenticate(userRepository, authProvider));
 
   router.get("/websites/:websiteId/seo-dashboard", async (req, res) => {
     try {

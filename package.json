@@ -13,11 +13,11 @@
         "test": "vitest run",
         "prisma:generate": "prisma generate",
         "prisma:validate": "prisma validate",
-        "seed:demo": "node scripts/seed-demo.js",
-        "auth:set-password": "node scripts/set-user-password.js"
+        "seed:demo": "node scripts/seed-demo.js"
     },
     "dependencies": {
         "@prisma/client": "^6.12.0",
+        "@supabase/supabase-js": "^2.112.4",
         "@vitejs/plugin-react": "latest",
         "bullmq": "^5.66.1",
         "cors": "^2.8.5",

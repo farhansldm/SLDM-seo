@@ -2,7 +2,7 @@ import { Router } from "express";
 import path from "node:path";
 import { z } from "zod";
 
-import { DatabaseSessionProvider } from "../auth/session.js";
+import { SupabaseAuthProvider } from "../auth/supabase.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaReportRepository } from "../repositories/reportRepository.js";
@@ -30,7 +30,7 @@ function handleError(res, error) {
 export function createReportRouter({
   userRepository = new PrismaUserRepository(),
   reportRepository = new PrismaReportRepository(),
-  sessionProvider = new DatabaseSessionProvider(userRepository),
+  authProvider = new SupabaseAuthProvider(),
   reportPdfService = new ReportPdfService(),
   reportService,
 } = {}) {
@@ -39,7 +39,7 @@ export function createReportRouter({
   const canReadReports = requireAnyPermission("report:approve_all", "report:approve_assigned", "report:view_approved");
   const canManageReports = requireAnyPermission("report:approve_all", "report:approve_assigned");
 
-  router.use(authenticate(userRepository, sessionProvider));
+  router.use(authenticate(userRepository, authProvider));
 
   router.get("/reports", canReadReports, async (req, res) => {
     try { return res.json(await service.listReports(req.auth)); } catch (error) { return handleError(res, error); }

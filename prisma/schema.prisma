@@ -39,6 +39,7 @@ model User {
   agencyId       String
   roleId         Int
   email          String             @unique
+  supabaseAuthId String?            @unique
   fullName       String?
   isActive       Boolean            @default(true)
   emailVerifiedAt DateTime?
@@ -53,34 +54,8 @@ model User {
   uploadedFiles  TaskAttachment[]
   aiRequests     AiRequest[]
   permissionOverrides PermissionOverride[]
-  credential     UserCredential?
-  sessions       Session[]
 
   @@index([agencyId])
-}
-
-model UserCredential {
-  userId            String    @id
-  passwordHash      String
-  failedAttempts    Int       @default(0)
-  lockedUntil       DateTime?
-  passwordChangedAt DateTime  @default(now())
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model Session {
-  id         String   @id @default(uuid())
-  userId     String
-  tokenHash  String   @unique
-  expiresAt  DateTime
-  lastSeenAt DateTime @default(now())
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
 }
 
 model Client {

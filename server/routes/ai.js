@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { AI_WORKFLOWS } from "../ai/prompts.js";
 import { createAiProvider } from "../ai/providerFactory.js";
-import { DatabaseSessionProvider } from "../auth/session.js";
+import { SupabaseAuthProvider } from "../auth/supabase.js";
 import { env } from "../config/env.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { SlidingWindowRateLimiter } from "../middleware/rateLimit.js";
@@ -30,7 +30,7 @@ function handleError(res, error) {
 export function createAiRouter({
   userRepository = new PrismaUserRepository(),
   aiRepository = new PrismaAiRepository(),
-  sessionProvider = new DatabaseSessionProvider(userRepository),
+  authProvider = new SupabaseAuthProvider(),
   aiProvider = createAiProvider(),
   aiService,
   aiRateLimiter = new SlidingWindowRateLimiter({ max: env.AI_RATE_LIMIT_MAX, windowMs: env.AI_RATE_LIMIT_WINDOW_MS }),
@@ -39,7 +39,7 @@ export function createAiRouter({
   const service = aiService ?? new AiService(aiRepository, aiProvider);
   const canUseAi = requireAnyPermission("ai:use_internal");
 
-  router.use(authenticate(userRepository, sessionProvider));
+  router.use(authenticate(userRepository, authProvider));
   router.use(canUseAi);
 
   router.get("/ai/workflows", (_req, res) => res.json({ workflows: Object.entries(AI_WORKFLOWS).map(([type, workflow]) => ({ type, label: workflow.label })) }));
