@@ -4,18 +4,17 @@ import { productModules } from "../../../shared/modules.js";
 import { useAuth } from "../auth/AuthProvider.jsx";
 
 export function DashboardPage() {
-  const dayOneModules = productModules.filter((module) => module.dayOneScope);
+  const mvpModules = productModules.filter((module) => module.dayOneScope);
   const { signOut, user } = useAuth();
 
   return (
     <main className="page-shell">
       <header className="page-header page-header-row">
         <div>
-          <span>JavaScript-only company foundation</span>
+          <span>Agency operations workspace</span>
           <h1>SEO Agency Platform</h1>
           <p>
-            Day 1 establishes the React app, Node API foundation, Prisma data model, RBAC rules, tenant scoping, and
-            client-safe response contracts.
+            Manage client SEO delivery, research, audits, tasks, reporting, and approvals from one secure workspace.
           </p>
         </div>
         <div className="session-card" aria-label="Current session">
@@ -27,8 +26,8 @@ export function DashboardPage() {
         </div>
       </header>
 
-      <section className="module-grid" aria-label="Day 1 modules">
-        {dayOneModules.map((module) => (
+      <section className="module-grid" aria-label="Platform modules">
+        {mvpModules.map((module) => (
           <article className="module-card" key={module.key}>
             <span>{module.key}</span>
             <strong>{module.name}</strong>
@@ -36,13 +35,14 @@ export function DashboardPage() {
         ))}
       </section>
 
-      <section className="quick-actions" aria-label="Day 3 actions">
+      <section className="quick-actions" aria-label="Workspace navigation">
         <Link to="/clients">Manage clients</Link>
         <Link to="/websites">Manage websites</Link>
         <Link to="/keywords">Open keyword tracking</Link>
         <Link to="/seo-dashboard">Open SEO dashboard</Link>
         <Link to="/audits">Open technical audits</Link>
         <Link to="/tasks">Open task workflow</Link>
+        {user?.role !== "client" ? <Link to="/ai">Open AI research</Link> : null}
         {user?.role === "client" ? <Link to="/portal">Open client portal</Link> : null}
         {["admin", "manager"].includes(user?.role) ? <Link to="/reports">Open reports</Link> : null}
       </section>

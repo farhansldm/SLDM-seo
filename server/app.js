@@ -10,12 +10,18 @@ import { createClientRouter } from "./routes/clients.js";
 import { createWebsiteRouter } from "./routes/websites.js";
 import { createTaskRouter } from "./routes/tasks.js";
 import { createReportRouter } from "./routes/reports.js";
+import { createAiRouter } from "./routes/ai.js";
+import { env } from "./config/env.js";
+import { corsOptions, securityHeaders } from "./middleware/security.js";
 
 export function createApp(options = {}) {
   const app = express();
 
-  app.use(cors());
-  app.use(express.json());
+  app.disable("x-powered-by");
+  if (env.TRUST_PROXY) app.set("trust proxy", 1);
+  app.use(securityHeaders);
+  app.use(cors(corsOptions()));
+  app.use(express.json({ limit: env.JSON_BODY_LIMIT }));
   app.use("/api/v1", healthRouter);
   app.use("/api/v1/auth", createAuthRouter(options));
   app.use("/api/v1", createClientRouter(options));
@@ -25,9 +31,16 @@ export function createApp(options = {}) {
   app.use("/api/v1", createAuditRouter(options));
   app.use("/api/v1", createTaskRouter(options));
   app.use("/api/v1", createReportRouter(options));
+  app.use("/api/v1", createAiRouter(options));
 
   app.use((req, res) => {
     res.status(404).json({ error: "Not found", path: req.path });
+  });
+
+  app.use((error, _req, res, next) => {
+    void next;
+    const statusCode = error.statusCode ?? (error.type === "entity.too.large" ? 413 : 500);
+    return res.status(statusCode).json({ error: statusCode === 500 ? "Internal server error" : error.message });
   });
 
   return app;

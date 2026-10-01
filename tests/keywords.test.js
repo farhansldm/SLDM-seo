@@ -14,13 +14,13 @@ class MemoryUserRepository {
     ]);
   }
 
-  async findUserBySupabaseAuthId(id) {
+  async findUserByAuthToken(id) {
     return this.users.get(id) ?? null;
   }
 }
 
-class FakeSupabaseAuthProvider {
-  async verifyAccessToken(token) {
+class FakeSessionProvider {
+  async verifySessionToken(token) {
     return { id: token, email: `${token}@sldm.test` };
   }
 }
@@ -99,7 +99,7 @@ class MemoryKeywordRepository {
 function makeApp() {
   return createApp({
     userRepository: new MemoryUserRepository(),
-    authProvider: new FakeSupabaseAuthProvider(),
+    sessionProvider: new FakeSessionProvider(),
     keywordRepository: new MemoryKeywordRepository(),
   });
 }

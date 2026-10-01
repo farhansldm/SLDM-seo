@@ -1,7 +1,6 @@
 ﻿import { useMemo, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { useAuth } from "../auth/AuthProvider.jsx";
 import { createKeyword, exportKeywords, fetchKeywordDashboard, generateRankings, importKeywords } from "./keywordApi.js";
 
 const initialFilters = { q: "", intent: "", device: "", location: "" };
@@ -26,7 +25,6 @@ function latestChartRows(keywords) {
 }
 
 export function KeywordPage() {
-  const { accessToken } = useAuth();
   const [websiteId, setWebsiteId] = useState("");
   const [filters, setFilters] = useState(initialFilters);
   const [keywordForm, setKeywordForm] = useState(initialKeyword);
@@ -51,13 +49,13 @@ export function KeywordPage() {
 
   async function loadDashboard(nextFilters = filters) {
     if (!websiteId) throw new Error("Website ID is required");
-    setDashboard(await fetchKeywordDashboard({ accessToken, websiteId, filters: nextFilters }));
+    setDashboard(await fetchKeywordDashboard({ websiteId, filters: nextFilters }));
   }
 
   async function handleCreateKeyword(event) {
     event.preventDefault();
     await run(async () => {
-      await createKeyword({ accessToken, websiteId, input: keywordForm });
+      await createKeyword({ websiteId, input: keywordForm });
       setKeywordForm(initialKeyword);
       await loadDashboard();
     });
@@ -65,7 +63,7 @@ export function KeywordPage() {
 
   async function handleExport() {
     await run(async () => {
-      const csv = await exportKeywords({ accessToken, websiteId, filters });
+      const csv = await exportKeywords({ websiteId, filters });
       const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
       const link = document.createElement("a");
       link.href = url;
@@ -159,9 +157,9 @@ export function KeywordPage() {
       <section className="keyword-actions" aria-label="Keyword import export actions">
         <textarea onChange={(event) => setImportCsv(event.target.value)} value={importCsv} />
         <div>
-          <button onClick={() => run(async () => { await importKeywords({ accessToken, websiteId, csv: importCsv }); await loadDashboard(); })} type="button">Import CSV</button>
-          <button onClick={() => run(async () => { setDashboard(await generateRankings({ accessToken, websiteId, days: 30 })); })} type="button">Generate 30 Days</button>
-          <button onClick={() => run(async () => { setDashboard(await generateRankings({ accessToken, websiteId, days: 90 })); })} type="button">Generate 90 Days</button>
+          <button onClick={() => run(async () => { await importKeywords({ websiteId, csv: importCsv }); await loadDashboard(); })} type="button">Import CSV</button>
+          <button onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 30 })); })} type="button">Generate 30 Days</button>
+          <button onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 90 })); })} type="button">Generate 90 Days</button>
           <button onClick={handleExport} type="button">Export CSV</button>
         </div>
       </section>

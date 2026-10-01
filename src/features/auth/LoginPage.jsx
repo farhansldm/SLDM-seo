@@ -31,12 +31,7 @@ export function LoginPage() {
       if (mode === "login") {
         await signIn(loginForm);
       } else {
-        const result = await signUp(signupForm);
-        if (result?.needsEmailConfirmation) {
-          setNotice("Check your email to confirm your Supabase account, then login.");
-          setMode("login");
-          return;
-        }
+        await signUp(signupForm);
       }
       navigate(returnTo, { replace: true });
     } catch (authError) {
@@ -106,7 +101,7 @@ export function LoginPage() {
             Password
             <input
               autoComplete={mode === "login" ? "current-password" : "new-password"}
-              minLength={8}
+              minLength={mode === "signup" ? 12 : 1}
               onChange={(event) =>
                 mode === "login"
                   ? setLoginForm({ ...loginForm, password: event.target.value })

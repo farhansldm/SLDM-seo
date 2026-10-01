@@ -17,7 +17,7 @@ function number(value) {
 }
 
 export function ReportsPage() {
-  const { accessToken, user } = useAuth();
+  const { user } = useAuth();
   const canManage = user?.role === "admin" || user?.role === "manager";
   const [reports, setReports] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -32,25 +32,23 @@ export function ReportsPage() {
   }
 
   async function loadReports() {
-    const response = await fetchReports(accessToken);
+    const response = await fetchReports();
     setReports(response.reports);
   }
 
   async function openReport(id) {
-    setSelected((await fetchReport(accessToken, id)).report);
+    setSelected((await fetchReport(id)).report);
   }
 
   useEffect(() => {
-    if (!accessToken) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     run(loadReports);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
     await run(async () => {
-      const response = await createReport(accessToken, { ...form, title: form.title || undefined });
+      const response = await createReport({ ...form, title: form.title || undefined });
       setSelected(response.report);
       setForm(defaultPeriod());
       await loadReports();
@@ -60,7 +58,7 @@ export function ReportsPage() {
 
   async function approve() {
     await run(async () => {
-      const response = await approveReport(accessToken, selected.id);
+      const response = await approveReport(selected.id);
       setSelected(response.report);
       await loadReports();
       setNotice("Report approved and PDF generated.");
@@ -89,9 +87,9 @@ export function ReportsPage() {
             <div className="report-chart"><h3>Organic Performance</h3><ResponsiveContainer height={240} width="100%"><LineChart data={data.performance.trend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip /><Line dataKey="organicTraffic" stroke="#1f6feb" strokeWidth={2} /><Line dataKey="clicks" stroke="#178a58" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
             <div className="report-columns"><section><h3>Completed Work</h3>{data.tasks.completedTitles.map((title) => <p key={title}><CheckCircle2 size={15} />{title}</p>)}</section><section><h3>Recommendations</h3>{data.recommendations.map((item) => <p key={item}>{item}</p>)}</section></div>
             <div className="report-actions">
-              {canManage ? <button onClick={() => run(async () => { const response = await generateReportPdf(accessToken, selected.id); setSelected(response.report); setNotice("PDF generated."); })} type="button"><FileText size={16} /> Generate PDF</button> : null}
+              {canManage ? <button onClick={() => run(async () => { const response = await generateReportPdf(selected.id); setSelected(response.report); setNotice("PDF generated."); })} type="button"><FileText size={16} /> Generate PDF</button> : null}
               {canManage && selected.status === "draft" ? <button onClick={approve} type="button"><CheckCircle2 size={16} /> Approve</button> : null}
-              {selected.pdfUrl ? <button onClick={() => run(() => downloadReportPdf(accessToken, selected.id, selected.title))} type="button"><Download size={16} /> Download PDF</button> : null}
+              {selected.pdfUrl ? <button onClick={() => run(() => downloadReportPdf(selected.id, selected.title))} type="button"><Download size={16} /> Download PDF</button> : null}
             </div>
           </> : <div className="empty-report"><FileText size={32} /><p>Select a report to preview it.</p></div>}
         </section>

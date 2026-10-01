@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { SupabaseAuthProvider } from "../auth/supabase.js";
+import { DatabaseSessionProvider } from "../auth/session.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaKeywordRepository } from "../repositories/keywordRepository.js";
@@ -35,13 +35,13 @@ function handleError(res, error) {
 export function createKeywordRouter({
   userRepository = new PrismaUserRepository(),
   keywordRepository = new PrismaKeywordRepository(),
-  authProvider = new SupabaseAuthProvider(),
+  sessionProvider = new DatabaseSessionProvider(userRepository),
   keywordService,
 } = {}) {
   const router = Router();
   const service = keywordService ?? new KeywordService(keywordRepository);
 
-  router.use(authenticate(userRepository, authProvider));
+  router.use(authenticate(userRepository, sessionProvider));
 
   const canReadKeywords = requireAnyPermission("keyword:manage_all", "keyword:manage_assigned", "keyword:view_assigned");
   const canManageKeywords = requireAnyPermission("keyword:manage_all", "keyword:manage_assigned");

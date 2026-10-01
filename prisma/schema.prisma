@@ -39,11 +39,12 @@ model User {
   agencyId       String
   roleId         Int
   email          String             @unique
-  supabaseAuthId String?            @unique
   fullName       String?
   isActive       Boolean            @default(true)
+  emailVerifiedAt DateTime?
   clientId       String?
   createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   agency         Agency             @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   role           Role               @relation(fields: [roleId], references: [id])
   client         Client?            @relation(fields: [clientId], references: [id])
@@ -52,8 +53,34 @@ model User {
   uploadedFiles  TaskAttachment[]
   aiRequests     AiRequest[]
   permissionOverrides PermissionOverride[]
+  credential     UserCredential?
+  sessions       Session[]
 
   @@index([agencyId])
+}
+
+model UserCredential {
+  userId            String    @id
+  passwordHash      String
+  failedAttempts    Int       @default(0)
+  lockedUntil       DateTime?
+  passwordChangedAt DateTime  @default(now())
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Client {
@@ -79,6 +106,7 @@ model Client {
   contentClusters ContentCluster[]
   contentBriefs   ContentBrief[]
   dataSources     DataSource[]
+  aiRequests      AiRequest[]
 
   @@index([agencyId])
 }
@@ -144,6 +172,7 @@ model Website {
   pageMetrics         PageMetric[]
   tasks               Task[]
   alerts              Alert[]
+  aiRequests          AiRequest[]
   contentClusters     ContentCluster[]
   contentBriefs       ContentBrief[]
 
@@ -676,17 +705,31 @@ model ContentCalendarItem {
 }
 
 model AiRequest {
-  id           String   @id @default(uuid())
-  userId       String
-  clientId     String?
-  requestType  String
-  inputPayload Json?
-  outputText   String?
-  createdAt    DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id])
+  id            String   @id @default(uuid())
+  userId        String
+  clientId      String?
+  websiteId     String?
+  requestType   String
+  provider      String
+  model         String
+  status        String   @default("completed")
+  reviewStatus  String   @default("pending")
+  inputPayload  Json?
+  outputText    String?
+  outputPayload Json?
+  errorMessage  String?
+  durationMs    Int?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client        Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  website       Website? @relation(fields: [websiteId], references: [id], onDelete: SetNull)
 
-  @@index([userId])
-  @@index([clientId])
+  @@index([userId, createdAt])
+  @@index([clientId, createdAt])
+  @@index([websiteId])
+  @@index([reviewStatus])
 }
 
 model PermissionOverride {

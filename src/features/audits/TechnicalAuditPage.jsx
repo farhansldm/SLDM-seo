@@ -1,6 +1,5 @@
 ﻿import { useState } from "react";
 
-import { useAuth } from "../auth/AuthProvider.jsx";
 import { createTaskFromCheck, fetchAuditRun, fetchAuditRuns, runTechnicalAudit, setAuditCheckResolution } from "./auditApi.js";
 
 function flattenChecks(run) {
@@ -12,7 +11,6 @@ function formatDate(value) {
 }
 
 export function TechnicalAuditPage() {
-  const { accessToken } = useAuth();
   const [websiteId, setWebsiteId] = useState("");
   const [runs, setRuns] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -35,32 +33,32 @@ export function TechnicalAuditPage() {
 
   async function loadRuns() {
     if (!websiteId) throw new Error("Website ID is required");
-    const response = await fetchAuditRuns({ accessToken, websiteId });
+    const response = await fetchAuditRuns({ websiteId });
     setRuns(response.runs);
   }
 
   async function runAudit() {
     if (!websiteId) throw new Error("Website ID is required");
-    const response = await runTechnicalAudit({ accessToken, websiteId });
+    const response = await runTechnicalAudit({ websiteId });
     setSelected(response);
     if (response.queued) setNotice("Audit queued. Refresh history after the worker completes it.");
-    const history = await fetchAuditRuns({ accessToken, websiteId });
+    const history = await fetchAuditRuns({ websiteId });
     setRuns(history.runs);
   }
 
   async function openRun(crawlRunId) {
-    setSelected(await fetchAuditRun({ accessToken, crawlRunId }));
+    setSelected(await fetchAuditRun({ crawlRunId }));
   }
 
   async function createTask(checkId) {
-    const response = await createTaskFromCheck({ accessToken, checkId });
+    const response = await createTaskFromCheck({ checkId });
     setNotice(`Created task: ${response.task.title}`);
   }
 
   async function setResolution(checkId, resolved) {
-    await setAuditCheckResolution({ accessToken, checkId, resolved });
+    await setAuditCheckResolution({ checkId, resolved });
     const crawlRunId = selected?.run?.id ?? selected?.crawlRun?.id;
-    if (crawlRunId) setSelected(await fetchAuditRun({ accessToken, crawlRunId }));
+    if (crawlRunId) setSelected(await fetchAuditRun({ crawlRunId }));
     setNotice(resolved ? "Issue marked resolved." : "Issue reopened.");
   }
 

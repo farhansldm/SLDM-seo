@@ -2,6 +2,8 @@
 import { prisma } from "../db/prisma.js";
 
 const userInclude = { role: true, assignments: true };
+const loginUserInclude = { ...userInclude, credential: true };
+const sessionInclude = { user: { include: userInclude } };
 
 export class PrismaUserRepository {
   constructor(client = prisma) {
@@ -21,18 +23,14 @@ export class PrismaUserRepository {
   }
 
   findUserByEmail(email) {
-    return this.client.user.findUnique({ where: { email: email.toLowerCase() }, include: userInclude });
+    return this.client.user.findUnique({ where: { email: email.toLowerCase() }, include: loginUserInclude });
   }
 
   findUserById(id) {
     return this.client.user.findUnique({ where: { id }, include: userInclude });
   }
 
-  findUserBySupabaseAuthId(supabaseAuthId) {
-    return this.client.user.findUnique({ where: { supabaseAuthId }, include: userInclude });
-  }
-
-  async createAgencyAdmin({ agencyName, fullName, email, supabaseAuthId }) {
+  async createAgencyAdmin({ agencyName, fullName, email, passwordHash }) {
     const adminRole = await this.findRoleByName(roles.ADMIN);
     if (!adminRole) throw new Error("Admin role is not seeded");
 
@@ -43,12 +41,36 @@ export class PrismaUserRepository {
           create: {
             email: email.toLowerCase(),
             fullName,
-            supabaseAuthId,
             roleId: adminRole.id,
+            credential: { create: { passwordHash } },
           },
         },
       },
       include: { users: { include: userInclude } },
     });
+  }
+
+  createSession(data) {
+    return this.client.session.create({ data });
+  }
+
+  findSessionByTokenHash(tokenHash) {
+    return this.client.session.findUnique({ where: { tokenHash }, include: sessionInclude });
+  }
+
+  touchSession(id, lastSeenAt) {
+    return this.client.session.update({ where: { id }, data: { lastSeenAt } });
+  }
+
+  deleteSession(id) {
+    return this.client.session.delete({ where: { id } }).catch(() => null);
+  }
+
+  deleteSessionByTokenHash(tokenHash) {
+    return this.client.session.delete({ where: { tokenHash } }).catch(() => null);
+  }
+
+  updateCredential(userId, data) {
+    return this.client.userCredential.update({ where: { userId }, data });
   }
 }

@@ -1,22 +1,25 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "../features/auth/AuthProvider.jsx";
 import { LoginPage } from "../features/auth/LoginPage.jsx";
 import { ProtectedRoute } from "../features/auth/ProtectedRoute.jsx";
 import { DashboardPage } from "../features/dashboard/DashboardPage.jsx";
-import { ClientsPage } from "../features/clients/ClientsPage.jsx";
-import { WebsitesPage } from "../features/websites/WebsitesPage.jsx";
-import { KeywordPage } from "../features/keywords/KeywordPage.jsx";
-import { SeoDashboardPage } from "../features/seo-dashboard/SeoDashboardPage.jsx";
-import { TechnicalAuditPage } from "../features/audits/TechnicalAuditPage.jsx";
-import { TasksPage } from "../features/tasks/TasksPage.jsx";
-import { ClientPortalPage } from "../features/reports/ClientPortalPage.jsx";
-import { ReportsPage } from "../features/reports/ReportsPage.jsx";
+
+const ClientsPage = lazy(() => import("../features/clients/ClientsPage.jsx").then((module) => ({ default: module.ClientsPage })));
+const WebsitesPage = lazy(() => import("../features/websites/WebsitesPage.jsx").then((module) => ({ default: module.WebsitesPage })));
+const KeywordPage = lazy(() => import("../features/keywords/KeywordPage.jsx").then((module) => ({ default: module.KeywordPage })));
+const SeoDashboardPage = lazy(() => import("../features/seo-dashboard/SeoDashboardPage.jsx").then((module) => ({ default: module.SeoDashboardPage })));
+const TechnicalAuditPage = lazy(() => import("../features/audits/TechnicalAuditPage.jsx").then((module) => ({ default: module.TechnicalAuditPage })));
+const TasksPage = lazy(() => import("../features/tasks/TasksPage.jsx").then((module) => ({ default: module.TasksPage })));
+const ClientPortalPage = lazy(() => import("../features/reports/ClientPortalPage.jsx").then((module) => ({ default: module.ClientPortalPage })));
+const ReportsPage = lazy(() => import("../features/reports/ReportsPage.jsx").then((module) => ({ default: module.ReportsPage })));
+const AiWorkspacePage = lazy(() => import("../features/ai/AiWorkspacePage.jsx").then((module) => ({ default: module.AiWorkspacePage })));
 
 export function App() {
   return (
     <AuthProvider>
-      <Routes>
+      <Suspense fallback={<main className="route-loading">Loading workspace...</main>}><Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/"
@@ -76,7 +79,8 @@ export function App() {
         />
         <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
         <Route path="/portal" element={<ProtectedRoute><ClientPortalPage /></ProtectedRoute>} />
-      </Routes>
+        <Route path="/ai" element={<ProtectedRoute><AiWorkspacePage /></ProtectedRoute>} />
+      </Routes></Suspense>
     </AuthProvider>
   );
 }

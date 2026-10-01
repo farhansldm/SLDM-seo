@@ -1,46 +1,7 @@
-﻿const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api/v1";
+import { apiRequest } from "../../lib/apiClient.js";
 
-async function parseResponse(response) {
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error ?? "Request failed");
-  return payload;
-}
-
-export async function fetchAuditRuns({ accessToken, websiteId }) {
-  const response = await fetch(`${API_BASE_URL}/websites/${websiteId}/audits`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return parseResponse(response);
-}
-
-export async function runTechnicalAudit({ accessToken, websiteId }) {
-  const response = await fetch(`${API_BASE_URL}/websites/${websiteId}/audits/run`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return parseResponse(response);
-}
-
-export async function fetchAuditRun({ accessToken, crawlRunId }) {
-  const response = await fetch(`${API_BASE_URL}/audits/${crawlRunId}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return parseResponse(response);
-}
-
-export async function createTaskFromCheck({ accessToken, checkId }) {
-  const response = await fetch(`${API_BASE_URL}/technical-checks/${checkId}/create-task`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  return parseResponse(response);
-}
-
-export async function setAuditCheckResolution({ accessToken, checkId, resolved }) {
-  const response = await fetch(`${API_BASE_URL}/technical-checks/${checkId}/resolution`, {
-    method: "PATCH",
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ resolved }),
-  });
-  return parseResponse(response);
-}
+export const fetchAuditRuns = ({ websiteId }) => apiRequest(`/websites/${websiteId}/audits`);
+export const runTechnicalAudit = ({ websiteId }) => apiRequest(`/websites/${websiteId}/audits/run`, { method: "POST" });
+export const fetchAuditRun = ({ crawlRunId }) => apiRequest(`/audits/${crawlRunId}`);
+export const createTaskFromCheck = ({ checkId }) => apiRequest(`/technical-checks/${checkId}/create-task`, { method: "POST" });
+export const setAuditCheckResolution = ({ checkId, resolved }) => apiRequest(`/technical-checks/${checkId}/resolution`, { method: "PATCH", body: JSON.stringify({ resolved }) });

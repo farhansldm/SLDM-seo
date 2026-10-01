@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 
-import { SupabaseAuthProvider } from "../auth/supabase.js";
+import { DatabaseSessionProvider } from "../auth/session.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaTaskRepository } from "../repositories/taskRepository.js";
@@ -50,7 +50,7 @@ function handleError(res, error) {
 export function createTaskRouter({
   userRepository = new PrismaUserRepository(),
   taskRepository = new PrismaTaskRepository(),
-  authProvider = new SupabaseAuthProvider(),
+  sessionProvider = new DatabaseSessionProvider(userRepository),
   taskService,
 } = {}) {
   const router = Router();
@@ -58,7 +58,7 @@ export function createTaskRouter({
   const canUseTasks = requireAnyPermission("task:manage_all", "task:assign_assigned", "task:update_assigned");
   const canManageTasks = requireAnyPermission("task:manage_all", "task:assign_assigned");
 
-  router.use(authenticate(userRepository, authProvider));
+  router.use(authenticate(userRepository, sessionProvider));
 
   router.get("/tasks/my", canUseTasks, async (req, res) => {
     try { return res.json(await service.listMyTasks(req.auth, filtersSchema.parse(req.query))); } catch (error) { return handleError(res, error); }

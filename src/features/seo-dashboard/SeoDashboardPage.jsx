@@ -1,7 +1,6 @@
 ﻿import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { useAuth } from "../auth/AuthProvider.jsx";
 import { fetchSeoDashboard } from "./seoDashboardApi.js";
 
 function formatDate(value) {
@@ -13,7 +12,6 @@ function percent(value) {
 }
 
 export function SeoDashboardPage() {
-  const { accessToken } = useAuth();
   const [websiteId, setWebsiteId] = useState("");
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState("");
@@ -25,7 +23,7 @@ export function SeoDashboardPage() {
     setIsLoading(true);
     try {
       if (!websiteId) throw new Error("Website ID is required");
-      setDashboard(await fetchSeoDashboard({ accessToken, websiteId }));
+      setDashboard(await fetchSeoDashboard({ websiteId }));
     } catch (requestError) {
       setError(requestError.message);
     } finally {

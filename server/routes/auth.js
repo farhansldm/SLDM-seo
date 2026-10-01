@@ -1,52 +1,60 @@
-﻿import { Router } from "express";
+import { Router } from "express";
 import { z } from "zod";
 
-import { SupabaseAuthProvider } from "../auth/supabase.js";
+import { clearSessionCookie, DatabaseSessionProvider, readSessionToken, setSessionCookie } from "../auth/session.js";
+import { env } from "../config/env.js";
 import { authenticate } from "../middleware/authenticate.js";
+import { SlidingWindowRateLimiter } from "../middleware/rateLimit.js";
 import { PrismaUserRepository } from "../repositories/userRepository.js";
 import { AuthService } from "../services/authService.js";
 
-const bootstrapSchema = z.object({
-  agencyName: z.string().min(2),
-  fullName: z.string().min(2),
-});
+const email = z.string().trim().email().max(254).transform((value) => value.toLowerCase());
+const password = z.string().min(12).max(128);
+const signupSchema = z.object({ agencyName: z.string().trim().min(2).max(120), fullName: z.string().trim().min(2).max(120), email, password });
+const loginSchema = z.object({ email, password: z.string().min(1).max(128) });
 
-function handleError(res, error) {
-  const statusCode = error.statusCode ?? 500;
-  const message = statusCode === 500 ? "Internal server error" : error.message;
-  return res.status(statusCode).json({ error: message });
+function metadata(req) {
+  return { ipAddress: req.ip, userAgent: req.get("user-agent") };
 }
 
-function readBearerToken(req) {
-  const header = req.get("authorization") ?? "";
-  const [scheme, token] = header.split(" ");
-  return scheme === "Bearer" ? token : null;
+function handleError(res, error) {
+  if (error instanceof z.ZodError) return res.status(422).json({ error: "Invalid request", issues: error.issues });
+  const statusCode = error.statusCode ?? 500;
+  return res.status(statusCode).json({ error: statusCode === 500 ? "Internal server error" : error.message });
 }
 
 export function createAuthRouter({
   authService,
   userRepository = new PrismaUserRepository(),
-  authProvider = new SupabaseAuthProvider(),
+  sessionProvider = new DatabaseSessionProvider(userRepository),
+  authRateLimiter = new SlidingWindowRateLimiter({ max: env.AUTH_RATE_LIMIT_MAX, windowMs: env.AUTH_RATE_LIMIT_WINDOW_MS }),
 } = {}) {
   const router = Router();
-  const service = authService ?? new AuthService(userRepository);
+  const service = authService ?? new AuthService(userRepository, sessionProvider);
+  const limitAuth = authRateLimiter.middleware();
 
-  router.post("/bootstrap-agency", async (req, res) => {
+  router.post("/signup", limitAuth, async (req, res) => {
     try {
-      const token = readBearerToken(req);
-      if (!token) return res.status(401).json({ error: "Missing bearer token" });
-      const input = bootstrapSchema.parse(req.body);
-      const supabaseUser = await authProvider.verifyAccessToken(token);
-      return res.status(201).json(await service.bootstrapAgencyAdmin(supabaseUser, input));
-    } catch (error) {
-      if (error instanceof z.ZodError) return res.status(422).json({ error: "Invalid request", issues: error.issues });
-      return handleError(res, error);
-    }
+      const result = await service.signup(signupSchema.parse(req.body), metadata(req));
+      setSessionCookie(res, result.token, result.expiresAt);
+      return res.status(201).json({ user: result.user });
+    } catch (error) { return handleError(res, error); }
   });
 
-  router.get("/me", authenticate(userRepository, authProvider), (req, res) => {
-    return res.json({ user: req.auth });
+  router.post("/login", limitAuth, async (req, res) => {
+    try {
+      const result = await service.login(loginSchema.parse(req.body), metadata(req));
+      setSessionCookie(res, result.token, result.expiresAt);
+      return res.json({ user: result.user });
+    } catch (error) { return handleError(res, error); }
   });
 
+  router.post("/logout", async (req, res) => {
+    await service.logout(readSessionToken(req));
+    clearSessionCookie(res);
+    return res.status(204).end();
+  });
+
+  router.get("/me", authenticate(userRepository, sessionProvider), (req, res) => res.json({ user: req.auth }));
   return router;
 }

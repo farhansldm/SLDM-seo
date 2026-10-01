@@ -1,26 +1,18 @@
-﻿import { SupabaseAuthProvider } from "../auth/supabase.js";
-import { PrismaUserRepository } from "../repositories/userRepository.js";
+import { readSessionToken } from "../auth/session.js";
 import { toAuthContext } from "../services/authService.js";
 
-export function authenticate(
-  userRepository = new PrismaUserRepository(),
-  authProvider = new SupabaseAuthProvider(),
-) {
+export function authenticate(userRepository, sessionProvider) {
   return async (req, res, next) => {
     try {
-      const header = req.get("authorization") ?? "";
-      const [scheme, token] = header.split(" ");
-      if (scheme !== "Bearer" || !token) {
-        return res.status(401).json({ error: "Missing bearer token" });
-      }
+      const token = readSessionToken(req);
+      if (!token) return res.status(401).json({ error: "Authentication required" });
 
-      const supabaseUser = await authProvider.verifyAccessToken(token);
-      const user = await userRepository.findUserBySupabaseAuthId(supabaseUser.id);
-      if (!user || !user.isActive) {
-        return res.status(403).json({ error: "Application profile not found or inactive" });
-      }
+      const identity = await sessionProvider.verifySessionToken(token);
+      const user = identity.user ?? await userRepository.findUserByAuthToken?.(identity.id);
+      if (!user || !user.isActive) return res.status(403).json({ error: "Application profile not found or inactive" });
 
-      req.supabaseUser = supabaseUser;
+      req.sessionToken = token;
+      req.session = identity.session ?? null;
       req.auth = toAuthContext(user);
       return next();
     } catch (error) {

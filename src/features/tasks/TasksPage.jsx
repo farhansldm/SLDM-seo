@@ -26,7 +26,7 @@ function formatDate(value) {
 }
 
 export function TasksPage() {
-  const { accessToken, user } = useAuth();
+  const { user } = useAuth();
   const canManage = user?.role === "admin" || user?.role === "manager";
   const [view, setView] = useState(user?.role === "employee" ? "mine" : "all");
   const [tasks, setTasks] = useState([]);
@@ -50,34 +50,33 @@ export function TasksPage() {
   }
 
   async function loadTasks(nextView = view) {
-    const response = nextView === "mine" ? await fetchMyTasks(accessToken) : await fetchTasks(accessToken);
+    const response = nextView === "mine" ? await fetchMyTasks() : await fetchTasks();
     setTasks(response.tasks);
   }
 
   async function openTask(id) {
-    const response = await fetchTask(accessToken, id);
+    const response = await fetchTask(id);
     setSelected(response.task);
     setAssigneeId(response.task.assignedTo ?? "");
   }
 
   async function loadInbox() {
-    const response = await fetchNotifications(accessToken);
+    const response = await fetchNotifications();
     setNotifications(response.notifications);
-    if (canManage) setAlerts((await fetchAlerts(accessToken)).alerts);
+    if (canManage) setAlerts((await fetchAlerts()).alerts);
   }
 
   useEffect(() => {
-    if (!accessToken) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     run(async () => { await Promise.all([loadTasks(view), loadInbox()]); });
     // Initial load follows the authenticated session; later refreshes are explicit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken]);
+  }, []);
 
   async function switchView(nextView) {
     setView(nextView);
     await run(async () => {
-      if (nextView === "workload") setWorkload(await fetchWorkload(accessToken));
+      if (nextView === "workload") setWorkload(await fetchWorkload());
       else await loadTasks(nextView);
     });
   }
@@ -85,7 +84,7 @@ export function TasksPage() {
   async function submitTask(event) {
     event.preventDefault();
     await run(async () => {
-      await createTask(accessToken, {
+      await createTask({
         ...form,
         websiteId: form.websiteId || null,
         assignedTo: form.assignedTo || null,
@@ -99,7 +98,7 @@ export function TasksPage() {
 
   async function changeStatus(status) {
     await run(async () => {
-      const response = await updateTask(accessToken, selected.id, { status });
+      const response = await updateTask(selected.id, { status });
       setSelected(response.task);
       setNotice("Task status updated.");
       await loadTasks(view);
@@ -108,7 +107,7 @@ export function TasksPage() {
 
   async function changeAssignee() {
     await run(async () => {
-      const response = await updateTask(accessToken, selected.id, { assignedTo: assigneeId || null });
+      const response = await updateTask(selected.id, { assignedTo: assigneeId || null });
       setSelected(response.task);
       setNotice(assigneeId ? "Task reassigned." : "Task unassigned.");
       await Promise.all([loadTasks(view), loadInbox()]);
@@ -117,7 +116,7 @@ export function TasksPage() {
 
   async function addComment() {
     await run(async () => {
-      await addTaskComment(accessToken, selected.id, comment);
+      await addTaskComment(selected.id, comment);
       setComment("");
       await openTask(selected.id);
       setNotice("Comment added.");
@@ -126,7 +125,7 @@ export function TasksPage() {
 
   async function addAttachment() {
     await run(async () => {
-      await addTaskAttachment(accessToken, selected.id, fileUrl);
+      await addTaskAttachment(selected.id, fileUrl);
       setFileUrl("");
       await openTask(selected.id);
       setNotice("Attachment metadata added.");
@@ -145,7 +144,7 @@ export function TasksPage() {
         {canManage ? <button aria-pressed={view === "all"} onClick={() => switchView("all")} type="button">All Tasks</button> : null}
         <button aria-pressed={view === "mine"} onClick={() => switchView("mine")} type="button">My Tasks</button>
         {canManage ? <button aria-pressed={view === "workload"} onClick={() => switchView("workload")} type="button"><Users size={16} /> Workload</button> : null}
-        <button disabled={isLoading} onClick={() => run(async () => { await Promise.all([view === "workload" ? fetchWorkload(accessToken).then(setWorkload) : loadTasks(view), loadInbox()]); })} title="Refresh current view" type="button"><RefreshCw size={16} /> Refresh</button>
+        <button disabled={isLoading} onClick={() => run(async () => { await Promise.all([view === "workload" ? fetchWorkload().then(setWorkload) : loadTasks(view), loadInbox()]); })} title="Refresh current view" type="button"><RefreshCw size={16} /> Refresh</button>
       </nav>
 
       {error ? <p className="auth-error keyword-error">{error}</p> : null}
@@ -202,7 +201,7 @@ export function TasksPage() {
                 <input onChange={(event) => setFileUrl(event.target.value)} placeholder="Attachment URL" type="url" value={fileUrl} />
                 <button disabled={!fileUrl} onClick={addAttachment} type="button"><Paperclip size={16} /> Add Attachment</button>
                 {selected.attachments.map((item) => <a href={item.fileUrl} key={item.id} rel="noreferrer" target="_blank">{item.fileUrl}</a>)}
-                {canManage ? <button className="danger-button" onClick={() => run(async () => { await deleteTask(accessToken, selected.id); setSelected(null); await loadTasks(view); })} type="button"><Trash2 size={16} /> Delete Task</button> : null}
+                {canManage ? <button className="danger-button" onClick={() => run(async () => { await deleteTask(selected.id); setSelected(null); await loadTasks(view); })} type="button"><Trash2 size={16} /> Delete Task</button> : null}
               </>
             ) : <p>Select a task.</p>}
           </aside>
@@ -210,8 +209,8 @@ export function TasksPage() {
       )}
 
       <section className="task-inbox">
-        <div><h2><Bell size={18} /> Notifications</h2>{notifications.map((item) => <button className={item.isRead ? "read" : ""} key={item.id} onClick={() => run(async () => { await readNotification(accessToken, item.id); await loadInbox(); })} type="button">{item.message}</button>)}</div>
-        {canManage ? <div><h2>Open Alerts</h2>{alerts.map((item) => <button key={item.id} onClick={() => run(async () => { await resolveAlert(accessToken, item.id); await loadInbox(); })} type="button"><strong>{item.title}</strong><span>{item.severity}</span></button>)}</div> : null}
+        <div><h2><Bell size={18} /> Notifications</h2>{notifications.map((item) => <button className={item.isRead ? "read" : ""} key={item.id} onClick={() => run(async () => { await readNotification(item.id); await loadInbox(); })} type="button">{item.message}</button>)}</div>
+        {canManage ? <div><h2>Open Alerts</h2>{alerts.map((item) => <button key={item.id} onClick={() => run(async () => { await resolveAlert(item.id); await loadInbox(); })} type="button"><strong>{item.title}</strong><span>{item.severity}</span></button>)}</div> : null}
       </section>
     </main>
   );

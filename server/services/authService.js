@@ -1,38 +1,57 @@
-﻿import { roles } from "../../shared/permissions.js";
+import { roles } from "../../shared/permissions.js";
+import { hashPassword, verifyPassword } from "../auth/password.js";
+
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000;
+
+function authError(message = "Invalid email or password", statusCode = 401) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
 
 export class AuthService {
-  constructor(userRepository) {
+  constructor(userRepository, sessionProvider, now = Date.now) {
     this.userRepository = userRepository;
+    this.sessionProvider = sessionProvider;
+    this.now = now;
   }
 
-  async bootstrapAgencyAdmin(supabaseUser, input) {
+  async signup(input, metadata = {}) {
     await this.userRepository.ensureRoles?.();
+    if (await this.userRepository.findUserByEmail(input.email)) throw authError("An account with this email already exists", 409);
+    const passwordHash = await hashPassword(input.password);
+    const agency = await this.userRepository.createAgencyAdmin({ ...input, email: input.email.toLowerCase(), passwordHash });
+    const user = agency.users[0];
+    const session = await this.sessionProvider.createSession(user.id, metadata);
+    return { user: toAuthContext(user), ...session };
+  }
 
-    const email = supabaseUser.email?.toLowerCase();
-    if (!email) {
-      const error = new Error("Supabase user email is required");
-      error.statusCode = 422;
-      throw error;
+  async login(input, metadata = {}) {
+    const user = await this.userRepository.findUserByEmail(input.email);
+    const credential = user?.credential;
+    if (!user || !credential || !user.isActive) throw authError();
+    if (credential.lockedUntil && credential.lockedUntil > new Date(this.now())) {
+      throw authError("Account temporarily locked after repeated failed attempts", 423);
     }
 
-    const existingAuthUser = await this.userRepository.findUserBySupabaseAuthId(supabaseUser.id);
-    if (existingAuthUser) return { user: toAuthContext(existingAuthUser) };
-
-    const existingEmailUser = await this.userRepository.findUserByEmail(email);
-    if (existingEmailUser) {
-      const error = new Error("Email already exists in this workspace");
-      error.statusCode = 409;
-      throw error;
+    const valid = await verifyPassword(input.password, credential.passwordHash);
+    if (!valid) {
+      const failedAttempts = credential.failedAttempts + 1;
+      await this.userRepository.updateCredential(user.id, {
+        failedAttempts: failedAttempts >= MAX_FAILED_ATTEMPTS ? 0 : failedAttempts,
+        lockedUntil: failedAttempts >= MAX_FAILED_ATTEMPTS ? new Date(this.now() + LOCK_DURATION_MS) : null,
+      });
+      throw authError();
     }
 
-    const agency = await this.userRepository.createAgencyAdmin({
-      agencyName: input.agencyName,
-      fullName: input.fullName,
-      email,
-      supabaseAuthId: supabaseUser.id,
-    });
+    await this.userRepository.updateCredential(user.id, { failedAttempts: 0, lockedUntil: null });
+    const session = await this.sessionProvider.createSession(user.id, metadata);
+    return { user: toAuthContext(user), ...session };
+  }
 
-    return { user: toAuthContext(agency.users[0]) };
+  logout(token) {
+    return this.sessionProvider.revokeSession(token);
   }
 }
 

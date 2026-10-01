@@ -1,7 +1,7 @@
 ﻿import { Router } from "express";
 import { z } from "zod";
 
-import { SupabaseAuthProvider } from "../auth/supabase.js";
+import { DatabaseSessionProvider } from "../auth/session.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaClientRepository } from "../repositories/clientRepository.js";
@@ -23,14 +23,14 @@ function handleError(res, error) {
   return res.status(statusCode).json({ error: statusCode === 500 ? "Internal server error" : error.message });
 }
 
-export function createClientRouter({ userRepository = new PrismaUserRepository(), clientRepository = new PrismaClientRepository(), authProvider = new SupabaseAuthProvider(), clientService } = {}) {
+export function createClientRouter({ userRepository = new PrismaUserRepository(), clientRepository = new PrismaClientRepository(), sessionProvider = new DatabaseSessionProvider(userRepository), clientService } = {}) {
   const router = Router();
   const service = clientService ?? new ClientService(clientRepository);
   const canReadClients = requireAnyPermission("client:manage_all", "client:manage_assigned", "client:view_assigned", "client:view_own_safe");
   const canManageClients = requireAnyPermission("client:manage_all", "client:manage_assigned");
   const canManageTeam = requireAnyPermission("team:manage", "client:manage_all", "client:manage_assigned");
 
-  router.use(authenticate(userRepository, authProvider));
+  router.use(authenticate(userRepository, sessionProvider));
 
   router.get("/clients", canReadClients, async (req, res) => {
     try { return res.json(await service.listClients(req.auth)); } catch (error) { return handleError(res, error); }
