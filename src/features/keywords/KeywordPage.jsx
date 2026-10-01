@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { createKeyword, exportKeywords, fetchKeywordDashboard, generateRankings, importKeywords } from "./keywordApi.js";
@@ -76,7 +76,7 @@ export function KeywordPage() {
   return (
     <main className="page-shell keyword-page">
       <header className="page-header">
-        <span>Day 3 keyword intelligence</span>
+        <span>Search intelligence</span>
         <h1>Keyword Research and Rank Tracking</h1>
         <p>Track keyword metrics, import lists, generate mock ranking history, and review movement summaries.</p>
       </header>
@@ -148,7 +148,7 @@ export function KeywordPage() {
               <XAxis dataKey="date" />
               <YAxis domain={[1, 100]} reversed />
               <Tooltip />
-              <Line dataKey="position" dot={false} stroke="#1f6feb" strokeWidth={2} />
+              <Line dataKey="position" dot={false} stroke="var(--chart-1)" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </div>

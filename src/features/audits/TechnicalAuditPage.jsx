@@ -67,7 +67,7 @@ export function TechnicalAuditPage() {
   return (
     <main className="page-shell audit-page">
       <header className="page-header">
-        <span>Day 7 technical audit</span>
+        <span>Technical health</span>
         <h1>Technical SEO Audit Engine</h1>
         <p>Run mock crawls, inspect URL-level issues, compare crawl history, and convert audit findings into tasks.</p>
       </header>

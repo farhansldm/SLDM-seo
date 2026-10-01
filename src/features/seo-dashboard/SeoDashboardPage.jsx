@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { fetchSeoDashboard } from "./seoDashboardApi.js";
@@ -36,7 +36,7 @@ export function SeoDashboardPage() {
   return (
     <main className="page-shell seo-page">
       <header className="page-header">
-        <span>Day 6 performance command center</span>
+        <span>Performance intelligence</span>
         <h1>SEO Dashboard and Share of Voice</h1>
         <p>Review traffic, rankings, audit health, backlinks, tasks, top pages, and competitor visibility.</p>
       </header>
@@ -81,8 +81,8 @@ export function SeoDashboardPage() {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Line dataKey="organicTraffic" stroke="#1f6feb" strokeWidth={2} />
-                  <Line dataKey="clicks" stroke="#178a58" strokeWidth={2} />
+                  <Line dataKey="organicTraffic" stroke="var(--chart-1)" strokeWidth={2} />
+                  <Line dataKey="clicks" stroke="var(--chart-3)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -95,9 +95,9 @@ export function SeoDashboardPage() {
                   <XAxis dataKey="date" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="improved" fill="#178a58" />
-                  <Bar dataKey="declined" fill="#b42318" />
-                  <Bar dataKey="unchanged" fill="#6b7b88" />
+                  <Bar dataKey="improved" fill="var(--chart-3)" />
+                  <Bar dataKey="declined" fill="var(--color-danger)" />
+                  <Bar dataKey="unchanged" fill="var(--color-text-muted)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -110,7 +110,7 @@ export function SeoDashboardPage() {
                   <XAxis dataKey="date" />
                   <YAxis reversed />
                   <Tooltip />
-                  <Line dataKey="averagePosition" stroke="#b54708" strokeWidth={2} />
+                  <Line dataKey="averagePosition" stroke="var(--color-warning)" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -123,7 +123,7 @@ export function SeoDashboardPage() {
                   <XAxis dataKey="bucket" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="count" fill="#1f6feb" />
+                  <Bar dataKey="count" fill="var(--chart-1)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -136,7 +136,7 @@ export function SeoDashboardPage() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="share" fill="#178a58" />
+                  <Bar dataKey="share" fill="var(--chart-3)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

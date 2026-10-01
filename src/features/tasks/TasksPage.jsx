@@ -135,7 +135,7 @@ export function TasksPage() {
   return (
     <main className="page-shell tasks-page">
       <header className="page-header">
-        <span>Day 8 execution workspace</span>
+        <span>Agency operations</span>
         <h1>Tasks, Workload, and Alerts</h1>
         <p>Assign SEO work, track delivery, collaborate on tasks, and respond to deadlines.</p>
       </header>

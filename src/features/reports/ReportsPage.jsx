@@ -69,7 +69,7 @@ export function ReportsPage() {
 
   return (
     <main className="page-shell reports-page">
-      <header className="page-header"><span>Day 9 reporting</span><h1>SEO Reports</h1><p>Generate frozen performance snapshots, review them internally, and publish approved PDFs to clients.</p></header>
+      <header className="page-header"><span>Reporting and approvals</span><h1>SEO Reports</h1><p>Generate frozen performance snapshots, review them internally, and publish approved PDFs to clients.</p></header>
       <div className="report-toolbar"><button disabled={isLoading} onClick={() => run(loadReports)} type="button"><RefreshCw size={16} /> Refresh</button></div>
       {error ? <p className="auth-error keyword-error">{error}</p> : null}{notice ? <p className="auth-notice keyword-error">{notice}</p> : null}
 
@@ -84,7 +84,7 @@ export function ReportsPage() {
             <header><div><span>{selected.client.companyName}</span><h2>{selected.title}</h2><p>{new Date(selected.periodStart).toLocaleDateString()} - {new Date(selected.periodEnd).toLocaleDateString()}</p></div><span className={`report-status ${selected.status}`}>{selected.status}</span></header>
             <p className="report-summary">{selected.summary}</p>
             <div className="report-kpis"><article><span>Organic Traffic</span><strong>{number(data.performance.organicTraffic)}</strong></article><article><span>Clicks</span><strong>{number(data.performance.clicks)}</strong></article><article><span>Keywords Improved</span><strong>{number(data.keywords.improved)}</strong></article><article><span>SEO Health</span><strong>{data.technicalHealth.averageScore}</strong></article><article><span>Completed Tasks</span><strong>{data.tasks.completed}</strong></article><article><span>New Backlinks</span><strong>{data.backlinks.newLinks}</strong></article></div>
-            <div className="report-chart"><h3>Organic Performance</h3><ResponsiveContainer height={240} width="100%"><LineChart data={data.performance.trend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip /><Line dataKey="organicTraffic" stroke="#1f6feb" strokeWidth={2} /><Line dataKey="clicks" stroke="#178a58" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
+            <div className="report-chart"><h3>Organic Performance</h3><ResponsiveContainer height={240} width="100%"><LineChart data={data.performance.trend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis /><Tooltip /><Line dataKey="organicTraffic" stroke="var(--chart-1)" strokeWidth={2} /><Line dataKey="clicks" stroke="var(--chart-3)" strokeWidth={2} /></LineChart></ResponsiveContainer></div>
             <div className="report-columns"><section><h3>Completed Work</h3>{data.tasks.completedTitles.map((title) => <p key={title}><CheckCircle2 size={15} />{title}</p>)}</section><section><h3>Recommendations</h3>{data.recommendations.map((item) => <p key={item}>{item}</p>)}</section></div>
             <div className="report-actions">
               {canManage ? <button onClick={() => run(async () => { const response = await generateReportPdf(selected.id); setSelected(response.report); setNotice("PDF generated."); })} type="button"><FileText size={16} /> Generate PDF</button> : null}
