@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Play, RefreshCw } from "lucide-react";
 
 import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { createTaskFromCheck, fetchAuditRun, fetchAuditRuns, runTechnicalAudit, setAuditCheckResolution } from "./auditApi.js";
@@ -18,6 +19,8 @@ export function TechnicalAuditPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [severity, setSeverity] = useState("all");
+  const [progress, setProgress] = useState("");
 
   async function action(callback) {
     setError("");
@@ -29,26 +32,79 @@ export function TechnicalAuditPage() {
       setError(requestError.message);
     } finally {
       setIsLoading(false);
+      setProgress("");
     }
-  }
-
-  async function loadRuns() {
-    if (!websiteId) throw new Error("Select a website from the workspace header first");
-    const response = await fetchAuditRuns({ websiteId });
-    setRuns(response.runs);
-  }
-
-  async function runAudit() {
-    if (!websiteId) throw new Error("Select a website from the workspace header first");
-    const response = await runTechnicalAudit({ websiteId });
-    setSelected(response);
-    if (response.queued) setNotice("Audit queued. Refresh history after the worker completes it.");
-    const history = await fetchAuditRuns({ websiteId });
-    setRuns(history.runs);
   }
 
   async function openRun(crawlRunId) {
     setSelected(await fetchAuditRun({ crawlRunId }));
+  }
+
+  async function loadRuns(openLatest = false) {
+    if (!websiteId) throw new Error("Select a website from the workspace header first");
+    const response = await fetchAuditRuns({ websiteId });
+    setRuns(response.runs);
+    if (openLatest && response.runs[0]) await openRun(response.runs[0].id);
+  }
+
+  useEffect(() => {
+    let active = true;
+    const timeout = window.setTimeout(async () => {
+      setError("");
+      setNotice("");
+      setSelected(null);
+      setRuns([]);
+      if (!websiteId) return;
+      setIsLoading(true);
+      setProgress("Loading audit history");
+      try {
+        const response = await fetchAuditRuns({ websiteId });
+        if (!active) return;
+        setRuns(response.runs);
+        if (response.runs[0]) {
+          const detail = await fetchAuditRun({ crawlRunId: response.runs[0].id });
+          if (active) setSelected(detail);
+        }
+      } catch (requestError) {
+        if (active) setError(requestError.message);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+          setProgress("");
+        }
+      }
+    }, 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timeout);
+    };
+  }, [websiteId]);
+
+  async function waitForRun(crawlRunId) {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 1500));
+      const detail = await fetchAuditRun({ crawlRunId });
+      const status = detail.run?.status;
+      if (status === "completed") return detail;
+      if (status === "failed") throw new Error("The crawl failed. Confirm the website is publicly accessible and try again.");
+      setProgress(`Crawling ${selectedWebsite?.domain ?? "website"}`);
+    }
+    return null;
+  }
+
+  async function runAudit() {
+    if (!websiteId) throw new Error("Select a website from the workspace header first");
+    setProgress(`Starting crawl for ${selectedWebsite?.domain ?? "website"}`);
+    const response = await runTechnicalAudit({ websiteId });
+    if (response.queued) {
+      setProgress("Audit queued");
+      const completed = await waitForRun(response.crawlRun.id);
+      if (completed) setSelected(completed);
+      else setNotice("The audit is still running in the background. Refresh history shortly.");
+    } else {
+      setSelected(response);
+    }
+    await loadRuns(false);
   }
 
   async function createTask(checkId) {
@@ -59,28 +115,39 @@ export function TechnicalAuditPage() {
   async function setResolution(checkId, resolved) {
     await setAuditCheckResolution({ checkId, resolved });
     const crawlRunId = selected?.run?.id ?? selected?.crawlRun?.id;
-    if (crawlRunId) setSelected(await fetchAuditRun({ crawlRunId }));
+    if (crawlRunId) await openRun(crawlRunId);
     setNotice(resolved ? "Issue marked resolved." : "Issue reopened.");
   }
 
-  const checks = flattenChecks(selected?.run ?? selected?.crawlRun);
+  const activeRun = selected?.run ?? selected?.crawlRun;
+  const checks = useMemo(() => flattenChecks(activeRun), [activeRun]);
+  const visibleChecks = severity === "all" ? checks : checks.filter((check) => check.severity === severity);
 
   return (
     <main className="page-shell audit-page">
       <header className="page-header">
         <span>Technical health</span>
         <h1>Technical SEO Audit Engine</h1>
-        <p>Run mock crawls, inspect URL-level issues, compare crawl history, and convert audit findings into tasks.</p>
+        <p>Crawl real pages, inspect URL-level issues, compare crawl history, and convert findings into tasks.</p>
       </header>
 
       <section className="audit-toolbar">
         <div className="context-summary"><span>Active website</span><strong>{selectedWebsite?.domain ?? "Select a website from the header"}</strong></div>
-        <button disabled={isLoading || !websiteId} onClick={() => action(loadRuns)} type="button">Load history</button>
-        <button disabled={isLoading || !websiteId} onClick={() => action(runAudit)} type="button">Run audit</button>
+        <button disabled={isLoading || !websiteId} onClick={() => action(() => loadRuns(true))} type="button"><RefreshCw size={16} /> Refresh history</button>
+        <button disabled={isLoading || !websiteId} onClick={() => action(runAudit)} type="button"><Play size={16} /> {progress || "Run live audit"}</button>
       </section>
 
       {error ? <p className="auth-error keyword-error">{error}</p> : null}
       {notice ? <p className="auth-notice keyword-error">{notice}</p> : null}
+
+      {activeRun ? (
+        <section className="audit-run-meta">
+          <span className={`run-status ${activeRun.status}`}>{activeRun.status}</span>
+          <span>{activeRun.source === "live" ? "Live crawl" : "Demo crawl"}</span>
+          <span>{activeRun.totalUrls ?? 0} pages</span>
+          <span>{formatDate(activeRun.completedAt ?? activeRun.startedAt)}</span>
+        </section>
+      ) : null}
 
       <section className="audit-summary">
         {["score", "total", "critical", "high", "medium", "low"].map((key) => (
@@ -103,36 +170,38 @@ export function TechnicalAuditPage() {
       <section className="audit-layout">
         <aside className="audit-history">
           <h2>Crawl History</h2>
+          {!runs.length ? <p>No audits yet. Run the first live crawl for this website.</p> : null}
           {runs.map((run) => (
-            <button key={run.id} onClick={() => action(() => openRun(run.id))} type="button">
+            <button className={activeRun?.id === run.id ? "active" : ""} key={run.id} onClick={() => action(() => openRun(run.id))} type="button">
               <strong>{formatDate(run.completedAt)}</strong>
-              <span>{run.totalUrls} URLs · {run.checks.total} issues · score {run.score}</span>
+              <span>{run.totalUrls} pages · {run.checks.total} issues · score {run.score ?? "pending"}</span>
+              <small>{run.source === "live" ? "Live" : "Demo"} · {run.status}</small>
             </button>
           ))}
         </aside>
 
         <section className="audit-issues">
-          <h2>Issues</h2>
+          <div className="audit-issues-header">
+            <h2>Issues</h2>
+            <label>Severity<select onChange={(event) => setSeverity(event.target.value)} value={severity}><option value="all">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+          </div>
           <table className="keyword-table">
-            <thead>
-              <tr><th>Severity</th><th>Type</th><th>URL</th><th>Status</th><th>Recommendation</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Severity</th><th>Type</th><th>URL</th><th>Status</th><th>Recommendation</th><th>Actions</th></tr></thead>
             <tbody>
-              {checks.map((check) => (
+              {visibleChecks.map((check) => (
                 <tr key={check.id ?? `${check.url}-${check.checkType}`}>
                   <td><span className={`severity ${check.severity}`}>{check.severity}</span></td>
-                  <td>{check.checkType}</td>
+                  <td>{check.checkType.replaceAll("_", " ")}</td>
                   <td>{check.url}</td>
                   <td>{check.status}</td>
                   <td>{check.recommendation}</td>
                   <td className="audit-row-actions">
-                    <button disabled={!check.id} onClick={() => action(() => setResolution(check.id, check.status !== "resolved"))} type="button">
-                      {check.status === "resolved" ? "Reopen" : "Resolve"}
-                    </button>
+                    <button disabled={!check.id} onClick={() => action(() => setResolution(check.id, check.status !== "resolved"))} type="button">{check.status === "resolved" ? "Reopen" : "Resolve"}</button>
                     <button disabled={!check.id} onClick={() => action(() => createTask(check.id))} type="button">Create task</button>
                   </td>
                 </tr>
               ))}
+              {!visibleChecks.length ? <tr><td colSpan="6">No issues match this view.</td></tr> : null}
             </tbody>
           </table>
         </section>

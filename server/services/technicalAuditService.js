@@ -38,6 +38,7 @@ const mockPages = [
     wordCount: 120,
     loadTimeMs: 920,
     depth: 2,
+    robotsBlocked: true,
   },
   {
     path: "/pricing",
@@ -50,6 +51,7 @@ const mockPages = [
     wordCount: 430,
     loadTimeMs: 1600,
     depth: 1,
+    redirected: true,
   },
   {
     path: "/case-study",
@@ -62,6 +64,8 @@ const mockPages = [
     wordCount: 190,
     loadTimeMs: 3600,
     depth: 2,
+    h1Count: 2,
+    missingAltImages: 2,
   },
 ];
 
@@ -75,21 +79,26 @@ function issue(checkType, severity, description, recommendation) {
 
 function checksForPage(page, duplicateTitles, duplicateMetas) {
   const checks = [];
-  if (page.statusCode >= 400) checks.push(issue("broken_link", "critical", "URL returns an error status.", "Fix the destination URL or redirect it to a live equivalent."));
-  if (page.statusCode >= 300 && page.statusCode < 400) checks.push(issue("redirect_chain", "medium", "URL redirects before resolving.", "Update internal links to the final canonical URL."));
+  if (page.statusCode === 0) checks.push(issue("crawl_error", "critical", page.crawlError || "URL could not be fetched.", "Confirm the URL is public, available, and permits crawling."));
+  if (page.statusCode >= 400) checks.push(issue("broken_link", "critical", `URL returns HTTP ${page.statusCode}.`, "Fix the destination URL or redirect it to a live equivalent."));
+  if (page.redirected || (page.statusCode >= 300 && page.statusCode < 400)) checks.push(issue("redirect", "medium", "URL redirects before resolving.", "Update internal links to the final destination URL."));
   if (!page.title) checks.push(issue("missing_title", "high", "Page is missing a title tag.", "Write a unique title with the primary keyword."));
+  if (page.title?.length > 60) checks.push(issue("long_title", "low", "Page title is longer than 60 characters.", "Shorten the title while retaining its primary topic."));
   if (duplicateTitles.has(page.title) && page.title) checks.push(issue("duplicate_title", "medium", "Page title is duplicated on multiple URLs.", "Make the title unique for this page intent."));
   if (!page.metaDescription) checks.push(issue("missing_meta_description", "medium", "Page is missing a meta description.", "Add a concise search-result description."));
+  if (page.metaDescription?.length > 160) checks.push(issue("long_meta_description", "low", "Meta description is longer than 160 characters.", "Rewrite it as a concise search-result description."));
   if (duplicateMetas.has(page.metaDescription) && page.metaDescription) checks.push(issue("duplicate_meta_description", "low", "Meta description is duplicated.", "Write a page-specific description."));
-  if (!page.h1) checks.push(issue("missing_h1", "medium", "Page is missing an H1.", "Add one clear H1 that reflects page intent."));
-  if ((page.h1?.match(/\|/g) ?? []).length > 0) checks.push(issue("multiple_h1", "medium", "Page appears to contain multiple H1-style headings.", "Keep one primary H1 and demote secondary headings."));
-  if (page.wordCount < 300) checks.push(issue("thin_content", "medium", "Page has low body content.", "Expand useful, intent-matched content."));
+  const h1Count = page.h1Count ?? (page.h1 ? 1 : 0);
+  if (!h1Count) checks.push(issue("missing_h1", "medium", "Page is missing an H1.", "Add one clear H1 that reflects page intent."));
+  if (h1Count > 1) checks.push(issue("multiple_h1", "medium", `Page contains ${h1Count} H1 headings.`, "Keep one primary H1 and demote secondary headings."));
+  if (page.statusCode === 200 && page.wordCount < 300) checks.push(issue("thin_content", "medium", "Page has low body content.", "Expand useful, intent-matched content."));
   if (page.loadTimeMs > 2500) checks.push(issue("slow_page", "high", "Page load time is above target.", "Optimize assets, caching, and render-blocking resources."));
   if (page.isIndexable === false) checks.push(issue("noindex", "high", "Page is not indexable.", "Confirm noindex is intentional or remove it."));
+  if (page.statusCode === 200 && !page.canonicalUrl) checks.push(issue("missing_canonical", "low", "Page does not declare a canonical URL.", "Add a self-referencing canonical URL where appropriate."));
   if (page.canonicalUrl?.includes("?")) checks.push(issue("canonical_problem", "medium", "Canonical URL contains tracking/query parameters.", "Point canonical to the clean preferred URL."));
-  if (page.path === "/case-study") checks.push(issue("image_alt_issue", "low", "Important images appear to be missing alt text.", "Add descriptive alt text to content images."));
-  if (page.path === "/services") checks.push(issue("sitemap_gap", "low", "Important URL is missing from sitemap coverage.", "Add the URL to the XML sitemap."));
-  if (page.path === "/blog/old-post") checks.push(issue("robots_block", "medium", "Robots rules may block discovery of this URL.", "Review robots.txt rules for this path."));
+  if (page.missingAltImages > 0) checks.push(issue("image_alt_issue", "low", `${page.missingAltImages} image${page.missingAltImages === 1 ? " is" : "s are"} missing alt text.`, "Add descriptive alt text to meaningful content images."));
+  if (page.sitemapIncluded === false) checks.push(issue("sitemap_gap", "low", "URL is missing from the XML sitemap.", "Add indexable canonical pages to the XML sitemap."));
+  if (page.robotsBlocked) checks.push(issue("robots_block", "medium", "Robots rules may block discovery of this URL.", "Review robots.txt rules for this path."));
   return checks;
 }
 
@@ -137,9 +146,10 @@ function assertWebsiteAccess(user, website) {
 }
 
 export class TechnicalAuditService {
-  constructor(repository, auditDispatcher = null) {
+  constructor(repository, auditDispatcher = null, siteCrawler = null) {
     this.repository = repository;
     this.auditDispatcher = auditDispatcher;
+    this.siteCrawler = siteCrawler;
   }
 
   buildMockCrawl(domain) {
@@ -165,7 +175,7 @@ export class TechnicalAuditService {
       agencyId: website.client.agencyId,
       clientId: website.clientId,
       websiteId,
-      source: "mock",
+      source: this.siteCrawler ? "live" : "mock",
       triggeredBy: user.id,
     });
     const job = { crawlRunId: crawlRun.id, websiteId, triggeredBy: user.id };
@@ -188,7 +198,16 @@ export class TechnicalAuditService {
     if (!website) throw new Error("Website not found for audit job");
 
     try {
-      const crawledUrls = this.buildMockCrawl(website.domain);
+      const pages = this.siteCrawler ? await this.siteCrawler.crawl(website.domain) : this.buildMockCrawl(website.domain);
+      const titleCounts = new Map();
+      const metaCounts = new Map();
+      pages.forEach((page) => {
+        if (page.title) titleCounts.set(page.title, (titleCounts.get(page.title) ?? 0) + 1);
+        if (page.metaDescription) metaCounts.set(page.metaDescription, (metaCounts.get(page.metaDescription) ?? 0) + 1);
+      });
+      const duplicateTitles = new Set([...titleCounts].filter(([, count]) => count > 1).map(([value]) => value));
+      const duplicateMetas = new Set([...metaCounts].filter(([, count]) => count > 1).map(([value]) => value));
+      const crawledUrls = pages.map((page) => ({ ...page, checks: page.checks ?? checksForPage(page, duplicateTitles, duplicateMetas) }));
       const allChecks = crawledUrls.flatMap((url) => url.checks.map((check) => ({ ...check, affectedUrl: url.url })));
       const score = scoreFromChecks(allChecks);
       const { crawlRun, seoAudit } = await this.repository.completeCrawlRun({

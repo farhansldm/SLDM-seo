@@ -3,6 +3,8 @@
 import { z } from "zod";
 
 import { SupabaseAuthProvider } from "../auth/supabase.js";
+import { env } from "../config/env.js";
+import { SiteCrawler } from "../crawlers/siteCrawler.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { requireAnyPermission } from "../middleware/requirePermission.js";
 import { PrismaAuditRepository } from "../repositories/auditRepository.js";
@@ -23,7 +25,12 @@ export function createAuditRouter({
   technicalAuditService,
 } = {}) {
   const router = Router();
-  const service = technicalAuditService ?? new TechnicalAuditService(auditRepository, auditDispatcher);
+  const crawler = env.NODE_ENV !== "test" && env.DATA_MODE === "live" ? new SiteCrawler({
+    maxPages: env.CRAWL_MAX_PAGES,
+    timeoutMs: env.CRAWL_TIMEOUT_MS,
+    maxResponseBytes: env.CRAWL_MAX_RESPONSE_BYTES,
+  }) : null;
+  const service = technicalAuditService ?? new TechnicalAuditService(auditRepository, auditDispatcher, crawler);
   const canViewAudits = requireAnyPermission("audit:manage_all", "audit:manage_assigned", "audit:view_assigned");
   const canRunAudits = requireAnyPermission("audit:manage_all", "audit:manage_assigned");
   const canCreateTasks = requireAnyPermission("task:manage_all", "task:assign_assigned", "task:update_assigned");

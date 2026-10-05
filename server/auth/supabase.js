@@ -12,6 +12,14 @@ export class SupabaseAuthProvider {
   async verifyAccessToken(accessToken) {
     const { data, error } = await this.client.auth.getUser(accessToken);
     if (error || !data.user) {
+      if (env.NODE_ENV !== "production") {
+        console.warn("Supabase access-token verification failed", {
+          code: error?.code,
+          message: error?.message,
+          name: error?.name,
+          status: error?.status,
+        });
+      }
       const authError = new Error("Invalid or expired Supabase session");
       authError.statusCode = 401;
       throw authError;

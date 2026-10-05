@@ -648,6 +648,7 @@ textarea::placeholder {
   }
 }
 .audit-toolbar,
+.audit-run-meta,
 .audit-summary,
 .comparison-strip,
 .audit-layout {
@@ -680,12 +681,50 @@ textarea::placeholder {
 .audit-toolbar button,
 .audit-issues button {
   min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: 0;
   border-radius: 8px;
   background: var(--color-interactive);
   color: var(--color-surface);
   font-weight: 800;
   padding: 0 12px;
+}
+
+.audit-run-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.audit-run-meta > span:not(.run-status) {
+  border-right: 1px solid var(--color-divider);
+  padding-right: 10px;
+}
+
+.run-status {
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
+  font-size: 10px;
+  font-weight: 850;
+  padding: 5px 8px;
+  text-transform: uppercase;
+}
+
+.run-status.completed {
+  background: var(--color-positive-soft);
+  color: var(--color-positive);
+}
+
+.run-status.failed {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .audit-row-actions {
@@ -773,8 +812,49 @@ textarea::placeholder {
   margin-top: 4px;
 }
 
+.audit-history button small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-subtle);
+  font-size: 11px;
+  text-transform: capitalize;
+}
+
+.audit-history button.active {
+  border-color: var(--color-interactive);
+  background: var(--color-info-soft);
+}
+
 .audit-issues {
   overflow-x: auto;
+}
+
+.audit-issues-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.audit-issues-header h2 {
+  margin: 0;
+}
+
+.audit-issues-header label {
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.audit-issues-header select {
+  min-height: 34px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: 5px 9px;
 }
 
 .severity {
@@ -799,6 +879,11 @@ textarea::placeholder {
   .audit-summary,
   .audit-layout {
     grid-template-columns: 1fr;
+  }
+
+  .audit-issues-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 .ops-toolbar,

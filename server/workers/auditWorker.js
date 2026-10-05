@@ -1,10 +1,16 @@
 import { Worker } from "bullmq";
 
 import { env } from "../config/env.js";
+import { SiteCrawler } from "../crawlers/siteCrawler.js";
 import { PrismaAuditRepository } from "../repositories/auditRepository.js";
 import { TechnicalAuditService } from "../services/technicalAuditService.js";
 
-const service = new TechnicalAuditService(new PrismaAuditRepository());
+const crawler = env.NODE_ENV !== "test" && env.DATA_MODE === "live" ? new SiteCrawler({
+  maxPages: env.CRAWL_MAX_PAGES,
+  timeoutMs: env.CRAWL_TIMEOUT_MS,
+  maxResponseBytes: env.CRAWL_MAX_RESPONSE_BYTES,
+}) : null;
+const service = new TechnicalAuditService(new PrismaAuditRepository(), null, crawler);
 
 const worker = new Worker(
   "seo-jobs",

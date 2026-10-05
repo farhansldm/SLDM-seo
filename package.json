@@ -20,6 +20,7 @@
         "@supabase/supabase-js": "^2.112.4",
         "@vitejs/plugin-react": "latest",
         "bullmq": "^5.66.1",
+        "cheerio": "^1.1.2",
         "cors": "^2.8.5",
         "dotenv": "^17.2.3",
         "express": "^5.2.1",
