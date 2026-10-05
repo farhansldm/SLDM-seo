@@ -33,13 +33,16 @@ export function AuthProvider({ children }) {
       return null;
     }
     try {
-      const profile = await getCurrentUser();
+      const profile = await getCurrentUser(session.access_token);
       setUser(profile.user);
       return profile.user;
     } catch (error) {
       const pending = readPendingSignup(session.user?.email);
       if (!pending) throw error;
-      const profile = await bootstrapAgencyAdmin({ agencyName: pending.agencyName, fullName: pending.fullName });
+      const profile = await bootstrapAgencyAdmin(
+        { agencyName: pending.agencyName, fullName: pending.fullName },
+        session.access_token,
+      );
       clearPendingSignup();
       setUser(profile.user);
       return profile.user;
