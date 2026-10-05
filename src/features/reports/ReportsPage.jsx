@@ -3,13 +3,14 @@ import { CheckCircle2, Download, FilePlus2, FileText, RefreshCw } from "lucide-r
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { approveReport, createReport, downloadReportPdf, fetchReport, fetchReports, generateReportPdf } from "./reportApi.js";
 
 function defaultPeriod() {
   const end = new Date();
   const start = new Date(end);
   start.setUTCDate(start.getUTCDate() - 30);
-  return { clientId: "", title: "", periodStart: start.toISOString().slice(0, 10), periodEnd: end.toISOString().slice(0, 10) };
+  return { title: "", periodStart: start.toISOString().slice(0, 10), periodEnd: end.toISOString().slice(0, 10) };
 }
 
 function number(value) {
@@ -18,6 +19,7 @@ function number(value) {
 
 export function ReportsPage() {
   const { user } = useAuth();
+  const { clientId, selectedClient } = useWorkspace();
   const canManage = user?.role === "admin" || user?.role === "manager";
   const [reports, setReports] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -48,7 +50,8 @@ export function ReportsPage() {
   async function submit(event) {
     event.preventDefault();
     await run(async () => {
-      const response = await createReport({ ...form, title: form.title || undefined });
+      if (!clientId) throw new Error("Select a client from the workspace header first");
+      const response = await createReport({ ...form, clientId, title: form.title || undefined });
       setSelected(response.report);
       setForm(defaultPeriod());
       await loadReports();
@@ -75,7 +78,7 @@ export function ReportsPage() {
 
       <section className="report-layout">
         <aside className="report-sidebar">
-          {canManage ? <form onSubmit={submit}><h2><FilePlus2 size={18} /> New Report</h2><input onChange={(event) => setForm({ ...form, clientId: event.target.value })} placeholder="Client ID" required value={form.clientId} /><input onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Report title (optional)" value={form.title} /><label>Period start<input onChange={(event) => setForm({ ...form, periodStart: event.target.value })} type="date" value={form.periodStart} /></label><label>Period end<input onChange={(event) => setForm({ ...form, periodEnd: event.target.value })} type="date" value={form.periodEnd} /></label><button type="submit"><FilePlus2 size={16} /> Generate Draft</button></form> : null}
+          {canManage ? <form onSubmit={submit}><h2><FilePlus2 size={18} /> New Report</h2><div className="context-summary"><span>Active client</span><strong>{selectedClient?.companyName ?? "Select a client from the header"}</strong></div><input onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Report title (optional)" value={form.title} /><label>Period start<input onChange={(event) => setForm({ ...form, periodStart: event.target.value })} type="date" value={form.periodStart} /></label><label>Period end<input onChange={(event) => setForm({ ...form, periodEnd: event.target.value })} type="date" value={form.periodEnd} /></label><button disabled={!clientId} type="submit"><FilePlus2 size={16} /> Generate Draft</button></form> : null}
           <div className="report-list"><h2>Reports</h2>{reports.map((report) => <button key={report.id} onClick={() => run(() => openReport(report.id))} type="button"><strong>{report.title}</strong><span>{report.client.companyName}</span><span className={`report-status ${report.status}`}>{report.status}</span></button>)}</div>
         </aside>
 

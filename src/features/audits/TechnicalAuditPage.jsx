@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { createTaskFromCheck, fetchAuditRun, fetchAuditRuns, runTechnicalAudit, setAuditCheckResolution } from "./auditApi.js";
 
 function flattenChecks(run) {
@@ -11,7 +12,7 @@ function formatDate(value) {
 }
 
 export function TechnicalAuditPage() {
-  const [websiteId, setWebsiteId] = useState("");
+  const { selectedWebsite, websiteId } = useWorkspace();
   const [runs, setRuns] = useState([]);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
@@ -32,13 +33,13 @@ export function TechnicalAuditPage() {
   }
 
   async function loadRuns() {
-    if (!websiteId) throw new Error("Website ID is required");
+    if (!websiteId) throw new Error("Select a website from the workspace header first");
     const response = await fetchAuditRuns({ websiteId });
     setRuns(response.runs);
   }
 
   async function runAudit() {
-    if (!websiteId) throw new Error("Website ID is required");
+    if (!websiteId) throw new Error("Select a website from the workspace header first");
     const response = await runTechnicalAudit({ websiteId });
     setSelected(response);
     if (response.queued) setNotice("Audit queued. Refresh history after the worker completes it.");
@@ -73,12 +74,9 @@ export function TechnicalAuditPage() {
       </header>
 
       <section className="audit-toolbar">
-        <label>
-          Website ID
-          <input onChange={(event) => setWebsiteId(event.target.value)} placeholder="website uuid" value={websiteId} />
-        </label>
-        <button disabled={isLoading} onClick={() => action(loadRuns)} type="button">Load history</button>
-        <button disabled={isLoading} onClick={() => action(runAudit)} type="button">Run audit</button>
+        <div className="context-summary"><span>Active website</span><strong>{selectedWebsite?.domain ?? "Select a website from the header"}</strong></div>
+        <button disabled={isLoading || !websiteId} onClick={() => action(loadRuns)} type="button">Load history</button>
+        <button disabled={isLoading || !websiteId} onClick={() => action(runAudit)} type="button">Run audit</button>
       </section>
 
       {error ? <p className="auth-error keyword-error">{error}</p> : null}

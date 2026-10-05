@@ -65,6 +65,7 @@ export function WorkspaceProvider({ children }) {
 
   const setClientId = useCallback((nextClientId) => {
     setClientIdState(nextClientId);
+    setWebsites([]);
     setWebsiteIdState("");
     window.localStorage.setItem(storageKey(user, "client"), nextClientId);
   }, [user]);
@@ -73,6 +74,26 @@ export function WorkspaceProvider({ children }) {
     setWebsiteIdState(nextWebsiteId);
     window.localStorage.setItem(storageKey(user, "website"), nextWebsiteId);
   }, [user]);
+
+  const refreshWebsites = useCallback(async () => {
+    if (!clientId) {
+      setWebsites([]);
+      setWebsiteIdState("");
+      return [];
+    }
+
+    const response = await fetchWebsites(clientId);
+    const nextWebsites = response.websites ?? [];
+    setWebsites(nextWebsites);
+    setWebsiteIdState((currentWebsiteId) => {
+      const nextWebsiteId = nextWebsites.some((website) => website.id === currentWebsiteId)
+        ? currentWebsiteId
+        : nextWebsites[0]?.id ?? "";
+      window.localStorage.setItem(storageKey(user, "website"), nextWebsiteId);
+      return nextWebsiteId;
+    });
+    return nextWebsites;
+  }, [clientId, user]);
 
   const value = useMemo(() => ({
     clients,
@@ -85,7 +106,8 @@ export function WorkspaceProvider({ children }) {
     setClientId,
     setWebsiteId,
     refreshClients: loadClients,
-  }), [clientId, clients, loadClients, setClientId, setWebsiteId, status, websiteId, websites]);
+    refreshWebsites,
+  }), [clientId, clients, loadClients, refreshWebsites, setClientId, setWebsiteId, status, websiteId, websites]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { fetchSeoDashboard } from "./seoDashboardApi.js";
 
 function formatDate(value) {
@@ -12,7 +13,7 @@ function percent(value) {
 }
 
 export function SeoDashboardPage() {
-  const [websiteId, setWebsiteId] = useState("");
+  const { selectedWebsite, websiteId } = useWorkspace();
   const [dashboard, setDashboard] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +23,7 @@ export function SeoDashboardPage() {
     setError("");
     setIsLoading(true);
     try {
-      if (!websiteId) throw new Error("Website ID is required");
+      if (!websiteId) throw new Error("Select a website from the workspace header first");
       setDashboard(await fetchSeoDashboard({ websiteId }));
     } catch (requestError) {
       setError(requestError.message);
@@ -42,11 +43,8 @@ export function SeoDashboardPage() {
       </header>
 
       <form className="seo-toolbar" onSubmit={loadDashboard}>
-        <label>
-          Website ID
-          <input onChange={(event) => setWebsiteId(event.target.value)} placeholder="website uuid" value={websiteId} />
-        </label>
-        <button disabled={isLoading} type="submit">{isLoading ? "Loading" : "Load dashboard"}</button>
+        <div className="context-summary"><span>Active website</span><strong>{selectedWebsite?.domain ?? "Select a website from the header"}</strong></div>
+        <button disabled={isLoading || !websiteId} type="submit">{isLoading ? "Loading" : "Load dashboard"}</button>
       </form>
 
       {error ? <p className="auth-error keyword-error">{error}</p> : null}

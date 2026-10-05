@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Bell, MessageSquare, Paperclip, Plus, RefreshCw, Trash2, Users } from "lucide-react";
 
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import {
   addTaskAttachment,
   addTaskComment,
@@ -18,7 +19,7 @@ import {
   updateTask,
 } from "./taskApi.js";
 
-const emptyTask = { clientId: "", websiteId: "", assignedTo: "", title: "", category: "technical_seo", priority: "medium", status: "todo", deadline: "" };
+const emptyTask = { assignedTo: "", title: "", category: "technical_seo", priority: "medium", status: "todo", deadline: "" };
 const statuses = ["todo", "in_progress", "blocked", "done", "cancelled"];
 
 function formatDate(value) {
@@ -27,6 +28,7 @@ function formatDate(value) {
 
 export function TasksPage() {
   const { user } = useAuth();
+  const { clientId, selectedClient, selectedWebsite, websiteId } = useWorkspace();
   const canManage = user?.role === "admin" || user?.role === "manager";
   const [view, setView] = useState(user?.role === "employee" ? "mine" : "all");
   const [tasks, setTasks] = useState([]);
@@ -84,9 +86,11 @@ export function TasksPage() {
   async function submitTask(event) {
     event.preventDefault();
     await run(async () => {
+      if (!clientId) throw new Error("Select a client from the workspace header first");
       await createTask({
         ...form,
-        websiteId: form.websiteId || null,
+        clientId,
+        websiteId: websiteId || null,
         assignedTo: form.assignedTo || null,
         deadline: form.deadline || null,
       });
@@ -162,14 +166,13 @@ export function TasksPage() {
           {canManage ? (
             <form className="task-form" onSubmit={submitTask}>
               <h2><Plus size={18} /> Create Task</h2>
+              <div className="context-summary"><span>Workspace</span><strong>{selectedClient?.companyName ?? "No client"}{selectedWebsite ? ` · ${selectedWebsite.domain}` : ""}</strong></div>
               <input onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Task title" required value={form.title} />
-              <input onChange={(event) => setForm({ ...form, clientId: event.target.value })} placeholder="Client ID" required value={form.clientId} />
-              <input onChange={(event) => setForm({ ...form, websiteId: event.target.value })} placeholder="Website ID (optional)" value={form.websiteId} />
               <input onChange={(event) => setForm({ ...form, assignedTo: event.target.value })} placeholder="Assignee user ID" value={form.assignedTo} />
               <input onChange={(event) => setForm({ ...form, category: event.target.value })} placeholder="Category" value={form.category} />
               <select onChange={(event) => setForm({ ...form, priority: event.target.value })} value={form.priority}><option>low</option><option>medium</option><option>high</option><option>urgent</option></select>
               <input onChange={(event) => setForm({ ...form, deadline: event.target.value })} type="datetime-local" value={form.deadline} />
-              <button type="submit"><Plus size={16} /> Create</button>
+              <button disabled={!clientId} type="submit"><Plus size={16} /> Create</button>
             </form>
           ) : null}
 

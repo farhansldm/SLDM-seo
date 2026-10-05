@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { createKeyword, exportKeywords, fetchKeywordDashboard, generateRankings, importKeywords } from "./keywordApi.js";
 
 const initialFilters = { q: "", intent: "", device: "", location: "" };
@@ -25,7 +26,7 @@ function latestChartRows(keywords) {
 }
 
 export function KeywordPage() {
-  const [websiteId, setWebsiteId] = useState("");
+  const { selectedWebsite, websiteId } = useWorkspace();
   const [filters, setFilters] = useState(initialFilters);
   const [keywordForm, setKeywordForm] = useState(initialKeyword);
   const [importCsv, setImportCsv] = useState("keyword,searchVolume,difficulty,cpc,intent,device,location,language\nseo agency,1200,42,3.2,commercial,desktop,United States,en");
@@ -48,7 +49,7 @@ export function KeywordPage() {
   }
 
   async function loadDashboard(nextFilters = filters) {
-    if (!websiteId) throw new Error("Website ID is required");
+    if (!websiteId) throw new Error("Select a website from the workspace header first");
     setDashboard(await fetchKeywordDashboard({ websiteId, filters: nextFilters }));
   }
 
@@ -82,10 +83,7 @@ export function KeywordPage() {
       </header>
 
       <section className="keyword-toolbar" aria-label="Website and keyword filters">
-        <label>
-          Website ID
-          <input onChange={(event) => setWebsiteId(event.target.value)} placeholder="website uuid" value={websiteId} />
-        </label>
+        <div className="context-summary"><span>Active website</span><strong>{selectedWebsite?.domain ?? "Select a website from the header"}</strong></div>
         <label>
           Search
           <input onChange={(event) => setFilters({ ...filters, q: event.target.value })} value={filters.q} />
@@ -108,7 +106,7 @@ export function KeywordPage() {
             <option value="mobile">Mobile</option>
           </select>
         </label>
-        <button onClick={() => run(() => loadDashboard())} type="button">
+        <button disabled={!websiteId || isLoading} onClick={() => run(() => loadDashboard())} type="button">
           Load
         </button>
       </section>
@@ -138,7 +136,7 @@ export function KeywordPage() {
           <input onChange={(event) => setKeywordForm({ ...keywordForm, searchVolume: event.target.value })} placeholder="volume" type="number" value={keywordForm.searchVolume} />
           <input onChange={(event) => setKeywordForm({ ...keywordForm, difficulty: event.target.value })} placeholder="difficulty" type="number" value={keywordForm.difficulty} />
           <input onChange={(event) => setKeywordForm({ ...keywordForm, cpc: event.target.value })} placeholder="cpc" type="number" value={keywordForm.cpc} />
-          <button disabled={isLoading} type="submit">Add</button>
+          <button disabled={isLoading || !websiteId} type="submit">Add</button>
         </form>
 
         <div className="keyword-chart" aria-label="Ranking history chart">
@@ -157,10 +155,10 @@ export function KeywordPage() {
       <section className="keyword-actions" aria-label="Keyword import export actions">
         <textarea onChange={(event) => setImportCsv(event.target.value)} value={importCsv} />
         <div>
-          <button onClick={() => run(async () => { await importKeywords({ websiteId, csv: importCsv }); await loadDashboard(); })} type="button">Import CSV</button>
-          <button onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 30 })); })} type="button">Generate 30 Days</button>
-          <button onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 90 })); })} type="button">Generate 90 Days</button>
-          <button onClick={handleExport} type="button">Export CSV</button>
+          <button disabled={!websiteId || isLoading} onClick={() => run(async () => { await importKeywords({ websiteId, csv: importCsv }); await loadDashboard(); })} type="button">Import CSV</button>
+          <button disabled={!websiteId || isLoading} onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 30 })); })} type="button">Generate 30 Days</button>
+          <button disabled={!websiteId || isLoading} onClick={() => run(async () => { setDashboard(await generateRankings({ websiteId, days: 90 })); })} type="button">Generate 90 Days</button>
+          <button disabled={!websiteId || isLoading} onClick={handleExport} type="button">Export CSV</button>
         </div>
       </section>
 

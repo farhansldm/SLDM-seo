@@ -3,15 +3,17 @@ import { ArrowLeft, Check, Clock3, RefreshCw, Send, ShieldCheck, Sparkles, X } f
 import { Link } from "react-router-dom";
 
 import { useAuth } from "../auth/AuthProvider.jsx";
+import { useWorkspace } from "../workspace/WorkspaceProvider.jsx";
 import { fetchAiHistory, fetchAiWorkflows, generateAiResearch, reviewAiResearch } from "./aiApi.js";
 
 export function AiWorkspacePage() {
   const { user } = useAuth();
+  const { clientId, selectedClient, selectedWebsite, websiteId } = useWorkspace();
   const canReview = ["admin", "manager"].includes(user?.role);
   const [workflows, setWorkflows] = useState([]);
   const [history, setHistory] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [form, setForm] = useState({ type: "keyword_expansion", clientId: "", websiteId: "", instructions: "" });
+  const [form, setForm] = useState({ type: "keyword_expansion", instructions: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -36,7 +38,8 @@ export function AiWorkspacePage() {
   async function submit(event) {
     event.preventDefault();
     await run(async () => {
-      const response = await generateAiResearch({ ...form, websiteId: form.websiteId || undefined });
+      if (!clientId) throw new Error("Select a client from the workspace header first");
+      const response = await generateAiResearch({ ...form, clientId, websiteId: websiteId || undefined });
       setSelected(response.request);
       setHistory((items) => [response.request, ...items]);
       setNotice("Research generated and queued for internal review.");
@@ -64,11 +67,10 @@ export function AiWorkspacePage() {
         <aside className="ai-controls">
           <form onSubmit={submit}>
             <h2><Sparkles size={18} /> New Research</h2>
+            <div className="context-summary"><span>Workspace</span><strong>{selectedClient?.companyName ?? "No client"}{selectedWebsite ? ` · ${selectedWebsite.domain}` : ""}</strong></div>
             <label>Workflow<select onChange={(event) => setForm({ ...form, type: event.target.value })} value={form.type}>{workflows.map((workflow) => <option key={workflow.type} value={workflow.type}>{workflow.label}</option>)}</select></label>
-            <label>Client ID<input onChange={(event) => setForm({ ...form, clientId: event.target.value })} required value={form.clientId} /></label>
-            <label>Website ID <span>Optional</span><input onChange={(event) => setForm({ ...form, websiteId: event.target.value })} value={form.websiteId} /></label>
             <label>Research direction<textarea maxLength={4000} onChange={(event) => setForm({ ...form, instructions: event.target.value })} placeholder="Focus, seed terms, audience, or reporting angle" rows={6} value={form.instructions} /></label>
-            <button disabled={isLoading} type="submit"><Send size={16} /> Generate</button>
+            <button disabled={isLoading || !clientId} type="submit"><Send size={16} /> Generate</button>
           </form>
           <div className="ai-history">
             <header><h2><Clock3 size={18} /> History</h2><button disabled={isLoading} onClick={() => run(load)} title="Refresh history" type="button"><RefreshCw size={16} /></button></header>
