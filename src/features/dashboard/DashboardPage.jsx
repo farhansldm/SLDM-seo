@@ -5,24 +5,17 @@ import { useAuth } from "../auth/AuthProvider.jsx";
 
 export function DashboardPage() {
   const mvpModules = productModules.filter((module) => module.dayOneScope);
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
 
   return (
     <main className="page-shell">
-      <header className="page-header page-header-row">
+      <header className="page-header">
         <div>
           <span>Agency operations workspace</span>
           <h1>SEO Agency Platform</h1>
           <p>
             Manage client SEO delivery, research, audits, tasks, reporting, and approvals from one secure workspace.
           </p>
-        </div>
-        <div className="session-card" aria-label="Current session">
-          <strong>{user?.fullName ?? "Authenticated user"}</strong>
-          <span>{user?.role ?? "role"}</span>
-          <button onClick={signOut} type="button">
-            Sign out
-          </button>
         </div>
       </header>
 
