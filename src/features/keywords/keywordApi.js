@@ -10,9 +10,11 @@ export function fetchKeywordDashboard({ websiteId, filters }) {
   const query = buildQuery(filters);
   return apiRequest(`/websites/${websiteId}/keywords${query ? `?${query}` : ""}`);
 }
+
 export const createKeyword = ({ websiteId, input }) => apiRequest(`/websites/${websiteId}/keywords`, { method: "POST", body: JSON.stringify(input) });
 export const importKeywords = ({ websiteId, csv }) => apiRequest(`/websites/${websiteId}/keywords/import`, { method: "POST", body: JSON.stringify({ csv }) });
 export const generateRankings = ({ websiteId, days }) => apiRequest(`/websites/${websiteId}/keywords/generate-rankings`, { method: "POST", body: JSON.stringify({ days }) });
+export const researchKeywords = ({ seed, location }) => apiRequest("/keywords/research", { method: "POST", body: JSON.stringify({ seed, location }) });
 
 export async function exportKeywords({ websiteId, filters }) {
   const query = buildQuery(filters);

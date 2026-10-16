@@ -225,6 +225,25 @@ export class SeoDashboardService {
       topPages: buildTopPages(website.pageMetrics),
       topKeywords: buildTopKeywords(website.keywords),
       shareOfVoice: buildShareOfVoice(website),
+      competitors: (website.competitors ?? []).map((competitor) => ({
+        id: competitor.id,
+        name: competitor.name ?? competitor.domain,
+        domain: competitor.domain,
+        priority: competitor.priority,
+        keywordCount: competitor.keywords?.length ?? 0,
+      })),
+      backlinks: [...(website.backlinks ?? [])]
+        .sort((a, b) => new Date(b.discoveredAt ?? 0) - new Date(a.discoveredAt ?? 0))
+        .slice(0, 20)
+        .map((link) => ({
+          id: link.id,
+          sourceUrl: link.sourceUrl,
+          targetUrl: link.targetUrl,
+          domainAuthority: link.domainAuthority,
+          anchorText: link.anchorText,
+          isDofollow: link.isDofollow,
+          discoveredAt: link.discoveredAt,
+        })),
       audience: safeForClient ? "client" : "internal",
     };
 
