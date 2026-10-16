@@ -187,6 +187,7 @@ export function SeoDashboardPage() {
             <section className="seo-grid">
               <Panel title="Traffic trend">
                 {traffic.length ? (
+                  <div className="ui-chart">
                   <ResponsiveContainer height={240} width="100%">
                     <LineChart data={traffic}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" />
@@ -197,11 +198,13 @@ export function SeoDashboardPage() {
                       <Line dataKey="clicks" name="Clicks" stroke="var(--chart-3)" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
+                  </div>
                 ) : <EmptyState description="Traffic history appears after page metrics are recorded." title="No traffic data" />}
               </Panel>
 
               <Panel title="Keyword movement">
                 {movement.length ? (
+                  <div className="ui-chart">
                   <ResponsiveContainer height={240} width="100%">
                     <BarChart data={movement}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" />
@@ -213,11 +216,13 @@ export function SeoDashboardPage() {
                       <Bar dataKey="unchanged" fill="var(--color-text-muted)" name="Stable" />
                     </BarChart>
                   </ResponsiveContainer>
+                  </div>
                 ) : <EmptyState description="Movement trends appear after ranking history is available." title="No movement data" />}
               </Panel>
 
               <Panel title="Average ranking">
                 {ranking.length ? (
+                  <div className="ui-chart">
                   <ResponsiveContainer height={240} width="100%">
                     <LineChart data={ranking}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" />
@@ -227,11 +232,13 @@ export function SeoDashboardPage() {
                       <Line dataKey="averagePosition" name="Average position" stroke="var(--color-warning)" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
+                  </div>
                 ) : <EmptyState description="Average ranking appears after keyword measurements are recorded." title="No ranking trend" />}
               </Panel>
 
               <Panel title="Share of voice">
                 {dashboard.shareOfVoice?.length ? (
+                  <div className="ui-chart">
                   <ResponsiveContainer height={240} width="100%">
                     <BarChart data={dashboard.shareOfVoice}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--color-divider)" />
@@ -241,6 +248,7 @@ export function SeoDashboardPage() {
                       <Bar dataKey="share" fill="var(--chart-3)" name="Share %" />
                     </BarChart>
                   </ResponsiveContainer>
+                  </div>
                 ) : <EmptyState description="Add competitors to estimate comparative visibility." icon={Radar} title="No share of voice yet" />}
               </Panel>
             </section>

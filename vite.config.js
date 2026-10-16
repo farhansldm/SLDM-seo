@@ -10,6 +10,7 @@ export default defineConfig({
           groups: [
             { name: "react-vendor", test: /node_modules[\\/]react(?:-dom|-router|-router-dom)?[\\/]/ },
             { name: "icons-vendor", test: /node_modules[\\/]lucide-react[\\/]/ },
+            { name: "charts-vendor", test: /node_modules[\\/]recharts[\\/]/ },
           ],
         },
       },

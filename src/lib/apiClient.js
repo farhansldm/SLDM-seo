@@ -16,20 +16,33 @@ async function sendRequest(path, options, authHeaders) {
 }
 
 export async function apiRequest(path, options = {}) {
-  let response = await sendRequest(path, options, await getAuthHeaders());
+  let response;
+  try {
+    response = await sendRequest(path, options, await getAuthHeaders());
+  } catch {
+    throw new Error("Unable to reach the server. Check your connection and try again.");
+  }
 
   if (response.status === 401) {
     const { data, error } = await supabase.auth.refreshSession();
     if (!error && data.session?.access_token) {
-      response = await sendRequest(path, {
-        ...options,
-        headers: { ...options.headers, Authorization: `Bearer ${data.session.access_token}` },
-      }, {});
+      try {
+        response = await sendRequest(path, {
+          ...options,
+          headers: { ...options.headers, Authorization: `Bearer ${data.session.access_token}` },
+        }, {});
+      } catch {
+        throw new Error("Unable to reach the server. Check your connection and try again.");
+      }
     }
   }
 
   if (response.status === 204) return null;
   const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error ?? "Request failed");
+  if (!response.ok) {
+    if (response.status === 403) throw new Error(payload.error ?? "You do not have permission for this action.");
+    if (response.status >= 500) throw new Error(payload.error ?? "The service is temporarily unavailable. Try again shortly.");
+    throw new Error(payload.error ?? "Request failed");
+  }
   return payload;
 }

@@ -32,7 +32,7 @@ function HomeRoute() {
 export function App() {
   return (
     <AuthProvider>
-      <ToastProvider><Suspense fallback={<main className="route-loading">Loading workspace...</main>}><Routes>
+      <ToastProvider><Suspense fallback={<main aria-busy="true" className="route-loading" role="status">Loading workspace...</main>}><Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           element={

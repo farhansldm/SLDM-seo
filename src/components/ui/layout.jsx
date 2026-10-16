@@ -19,7 +19,36 @@ export function FilterBar({ children, className }) {
 }
 
 export function Tabs({ active, ariaLabel = "Views", items, onChange }) {
-  return <div aria-label={ariaLabel} className="ui-tabs" role="tablist">{items.map((item) => <button aria-selected={active === item.value} key={item.value} onClick={() => onChange(item.value)} role="tab" type="button">{item.icon ? <item.icon aria-hidden="true" size={16} /> : null}{item.label}</button>)}</div>;
+  function onKeyDown(event) {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const index = items.findIndex((item) => item.value === active);
+    if (index < 0) return;
+    if (event.key === "Home") onChange(items[0].value);
+    else if (event.key === "End") onChange(items[items.length - 1].value);
+    else if (event.key === "ArrowRight") onChange(items[(index + 1) % items.length].value);
+    else onChange(items[(index - 1 + items.length) % items.length].value);
+  }
+
+  return (
+    <div aria-label={ariaLabel} className="ui-tabs" onKeyDown={onKeyDown} role="tablist">
+      {items.map((item) => (
+        <button
+          aria-controls={`panel-${item.value}`}
+          aria-selected={active === item.value}
+          id={`tab-${item.value}`}
+          key={item.value}
+          onClick={() => onChange(item.value)}
+          role="tab"
+          tabIndex={active === item.value ? 0 : -1}
+          type="button"
+        >
+          {item.icon ? <item.icon aria-hidden="true" size={16} /> : null}
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export function Badge({ children, tone = "neutral" }) {
@@ -40,7 +69,23 @@ export function KpiCard({ change, changeTone = "neutral", label, value }) {
 
 export function DataTable({ caption, columns, empty, rows, rowClassName, rowKey = "id" }) {
   if (!rows.length) return empty ?? null;
-  return <div className="ui-table-wrap"><table className="ui-table"><caption className="sr-only">{caption}</caption><thead><tr>{columns.map((column) => <th key={column.key} scope="col">{column.label}</th>)}</tr></thead><tbody>{rows.map((row) => <tr className={rowClassName ? rowClassName(row) : undefined} key={typeof rowKey === "function" ? rowKey(row) : row[rowKey]}>{columns.map((column) => <td data-label={column.label} key={column.key}>{column.render ? column.render(row) : row[column.key]}</td>)}</tr>)}</tbody></table></div>;
+  return (
+    <div className="ui-table-wrap">
+      <table className="ui-table">
+        <caption className="sr-only">{caption}</caption>
+        <thead>
+          <tr>{columns.map((column) => <th key={column.key} scope="col">{column.label}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr className={rowClassName ? rowClassName(row) : undefined} key={typeof rowKey === "function" ? rowKey(row) : row[rowKey]}>
+              {columns.map((column) => <td data-label={column.label} key={column.key}>{column.render ? column.render(row) : row[column.key]}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export function Pagination({ onPageChange, page, pageCount }) {
@@ -54,4 +99,3 @@ export function ContextSummary({ label, value }) {
 export function ConfirmationActions({ cancelLabel = "Cancel", confirmLabel = "Confirm", destructive = false, onCancel, onConfirm }) {
   return <div className="ui-confirm-actions"><Button onClick={onCancel} variant="secondary">{cancelLabel}</Button><Button onClick={onConfirm} variant={destructive ? "danger" : "primary"}>{confirmLabel}</Button></div>;
 }
-

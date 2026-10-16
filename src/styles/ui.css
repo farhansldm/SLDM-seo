@@ -71,6 +71,7 @@
 .ui-table th { color: var(--color-text-muted); font-size: 11px; text-transform: uppercase; }
 .ui-table tbody tr:hover { background: var(--color-surface-muted); }
 .ui-table tbody tr.is-selected, .ui-table tbody tr.is-selected:hover { background: var(--brand-50); }
+.ui-chart { width: 100%; min-width: 0; min-height: 240px; }
 .ui-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 12px; color: var(--color-text-muted); font-size: 13px; }
 
 .ui-alert { max-width: var(--content-width); margin: 12px auto 0; display: flex; gap: 10px; border: 1px solid; border-radius: var(--radius-md); padding: 11px 13px; }
@@ -100,9 +101,21 @@
 
 @media (max-width: 720px) {
   .ui-page-header { display: block; }.ui-page-header h1 { font-size: 27px; }.ui-page-header__actions { margin-top: 14px; }
-  .ui-toolbar, .ui-filter-bar { align-items: stretch; }.ui-toolbar > *, .ui-filter-bar > * { flex: 1 1 100%; }
+  .ui-toolbar, .ui-filter-bar { align-items: stretch; }.ui-toolbar > *, .ui-filter-bar > * { flex: 1 1 min(100%, 240px); }
   .ui-button { width: 100%; }.ui-icon-button { width: 40px; }
-  .ui-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }.ui-tabs button { justify-content: center; }
-  .ui-overlay { padding: 0; align-items: end; }.ui-dialog { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .ui-tabs { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow-x: auto; }.ui-tabs button { justify-content: center; white-space: nowrap; }
+  .ui-overlay { padding: 0; align-items: end; }.ui-dialog { width: 100%; max-height: min(92vh, 760px); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .ui-drawer { width: min(100%, 520px); }
   .ui-form-grid { grid-template-columns: 1fr; }
+  .ui-table { min-width: 0; }
+  .ui-table thead { display: none; }
+  .ui-table tbody tr { display: grid; gap: 8px; border-bottom: 1px solid var(--color-divider); padding: 12px 0; }
+  .ui-table tbody tr:hover, .ui-table tbody tr.is-selected, .ui-table tbody tr.is-selected:hover { background: transparent; }
+  .ui-table td { display: grid; grid-template-columns: minmax(96px, 34%) minmax(0, 1fr); gap: 10px; border: 0; padding: 0; }
+  .ui-table td::before { content: attr(data-label); color: var(--color-text-muted); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+  .ui-panel__header { flex-direction: column; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-skeleton span { animation: none; background: var(--color-divider); }
 }
