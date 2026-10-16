@@ -26,12 +26,15 @@ function clearPendingSignup() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   const loadAppUser = useCallback(async (session) => {
     if (!session?.access_token) {
       setUser(null);
       return null;
     }
+    setAuthError("");
     try {
       const profile = await getCurrentUser(session.access_token);
       setUser(profile.user);
@@ -51,22 +54,30 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
       try {
+        if (error) throw error;
         if (mounted) await loadAppUser(data.session);
-      } catch {
-        if (mounted) setUser(null);
+      } catch (error) {
+        if (mounted) {
+          setUser(null);
+          setAuthError(error.message ?? "Your session could not be restored");
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") setIsPasswordRecovery(true);
       setTimeout(async () => {
         try {
           if (mounted) await loadAppUser(session);
-        } catch {
-          if (mounted) setUser(null);
+        } catch (error) {
+          if (mounted) {
+            setUser(null);
+            setAuthError(error.message ?? "Your session could not be verified");
+          }
         } finally {
           if (mounted) setIsLoading(false);
         }
@@ -79,6 +90,7 @@ export function AuthProvider({ children }) {
   }, [loadAppUser]);
 
   const signIn = useCallback(async ({ email, password }) => {
+    setAuthError("");
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
     await loadAppUser(data.session);
@@ -86,6 +98,7 @@ export function AuthProvider({ children }) {
   }, [loadAppUser]);
 
   const signUp = useCallback(async ({ agencyName, fullName, email, password }) => {
+    setAuthError("");
     const pending = { agencyName, fullName, email };
     storePendingSignup(pending);
     const { data, error } = await supabase.auth.signUp({
@@ -106,6 +119,20 @@ export function AuthProvider({ children }) {
     const { error } = await supabase.auth.signOut();
     if (error) throw new Error(error.message);
     setUser(null);
+    setAuthError("");
+  }, []);
+
+  const requestPasswordReset = useCallback(async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
+  const updatePassword = useCallback(async (password) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) throw new Error(error.message);
+    setIsPasswordRecovery(false);
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -116,13 +143,17 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(() => ({
     user,
+    authError,
     isAuthenticated: Boolean(user),
     isLoading,
+    isPasswordRecovery,
+    requestPasswordReset,
     refreshUser,
     signIn,
     signUp,
     signOut,
-  }), [isLoading, refreshUser, signIn, signOut, signUp, user]);
+    updatePassword,
+  }), [authError, isLoading, isPasswordRecovery, refreshUser, requestPasswordReset, signIn, signOut, signUp, updatePassword, user]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

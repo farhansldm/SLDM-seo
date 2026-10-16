@@ -1,4 +1,5 @@
 @import "./tokens.css";
+@import "./ui.css";
 
 :root {
   font-family: var(--font-sans);
@@ -471,10 +472,11 @@ textarea::placeholder {
 }
 
 .keyword-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
+  display: block;
 }
+
+.keyword-actions > .ui-field { margin-bottom: 12px; }
+.keyword-action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .keyword-actions textarea {
   min-height: 120px;
@@ -488,8 +490,10 @@ textarea::placeholder {
 }
 
 .keyword-table-wrap {
-  overflow-x: auto;
+  overflow: hidden;
 }
+
+.audit-url { display: block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .keyword-table {
   width: 100%;
@@ -972,6 +976,86 @@ textarea::placeholder {
 @media (max-width: 920px) {
   .ops-layout { grid-template-columns: 1fr; }
   .ops-toolbar { display: grid; }
+}
+
+/* Authentication and first-workspace onboarding */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: var(--brand-50);
+}
+
+.auth-panel {
+  width: min(1040px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-copy {
+  min-width: 0;
+  min-height: 640px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 42px;
+  background: var(--brand-900);
+  color: var(--brand-50);
+}
+
+.auth-brand { display: flex; align-items: center; gap: 10px; }
+.auth-brand > span { width: 34px; height: 34px; display: grid; place-items: center; margin: 0; border-radius: var(--radius-md); background: var(--color-interactive); color: #fff; font-size: 17px; }
+.auth-brand strong { font-size: 18px; }
+.auth-copy .auth-eyebrow { margin-bottom: 12px; color: var(--brand-300); font-size: 12px; text-transform: uppercase; }
+.auth-copy h1 { max-width: 520px; margin: 0 0 14px; color: var(--brand-50); font-size: 38px; line-height: 1.14; }
+.auth-copy p { max-width: 540px; color: var(--brand-100); }
+.auth-copy ul { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.auth-copy li { display: flex; align-items: center; gap: 8px; color: var(--brand-100); font-size: 13px; }
+
+.auth-form { min-width: 0; align-content: center; gap: 15px; padding: 42px; }
+.auth-heading span { display: flex; align-items: center; gap: 7px; color: var(--brand-700); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.auth-heading h2 { margin: 5px 0; font-size: 25px; }
+.auth-heading p { margin: 0 0 4px; color: var(--color-text-muted); font-size: 14px; }
+.auth-heading--compact { margin-bottom: 8px; }
+.auth-tabs { padding: 3px; border: 1px solid var(--color-border); background: var(--color-surface-muted); }
+.auth-tabs button { border-radius: var(--radius-sm); }
+.auth-tabs button[aria-selected="true"] { background: var(--color-surface); color: var(--color-text-strong); box-shadow: var(--shadow-sm); }
+.auth-form .ui-alert { margin: 0; }
+.auth-password { position: relative; }
+.auth-password .ui-field { padding-right: 48px; }
+.auth-password .ui-icon-button { position: absolute; right: 0; top: 26px; }
+.auth-text-button { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; background: transparent; color: var(--color-interactive); font-size: 13px; font-weight: 700; }
+.auth-confirmation { display: grid; justify-items: center; align-content: center; min-height: 420px; text-align: center; }
+.auth-confirmation > span { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 50%; background: var(--color-positive-soft); color: var(--color-positive); }
+.auth-confirmation h2 { margin: 14px 0 6px; }.auth-confirmation p { max-width: 360px; margin: 0 0 18px; color: var(--color-text-muted); }
+
+.onboarding-page { min-height: calc(100vh - 76px); display: grid; place-items: start center; padding: 30px; background: var(--color-canvas); }
+.onboarding-shell { width: min(900px, 100%); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); }
+.onboarding-header { min-height: 78px; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 24px; border-bottom: 1px solid var(--color-divider); }
+.onboarding-brand { display: flex; align-items: center; gap: 9px; }.onboarding-brand span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--radius-md); background: var(--brand-900); color: #fff; font-weight: 800; }
+.onboarding-progress { display: flex; align-items: flex-start; gap: 40px; }
+.onboarding-progress > span { position: relative; display: grid; justify-items: center; gap: 4px; color: var(--color-text-subtle); }
+.onboarding-progress > span:not(:last-child)::after { content: ""; position: absolute; top: 13px; left: calc(50% + 16px); width: 40px; height: 1px; background: var(--color-border); }
+.onboarding-progress i { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid var(--color-border-strong); border-radius: 50%; background: var(--color-surface); font-size: 12px; font-style: normal; font-weight: 750; }
+.onboarding-progress small { font-size: 11px; }.onboarding-progress .active { color: var(--color-interactive); }.onboarding-progress .active i { border-color: var(--color-interactive); background: var(--color-interactive); color: #fff; }
+.onboarding-content { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1.2fr); gap: 46px; padding: 44px; }
+.onboarding-intro > span { width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--radius-md); background: var(--color-interactive-soft); color: var(--color-interactive); }
+.onboarding-intro > p:first-of-type { margin: 18px 0 4px; color: var(--brand-700); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.onboarding-intro h1 { margin: 0 0 10px; font-size: 28px; line-height: 1.2; }.onboarding-intro p:last-child { margin: 0; color: var(--color-text-muted); }
+.onboarding-form { display: grid; gap: 15px; }.onboarding-form .ui-alert { margin: 0; }.onboarding-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.onboarding-options { display: flex; flex-wrap: wrap; gap: 18px; margin: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px; }.onboarding-options legend { padding: 0 5px; color: var(--color-text); font-size: 13px; font-weight: 700; }.onboarding-options small { flex-basis: 100%; color: var(--color-danger); }
+.onboarding-actions { display: grid; grid-template-columns: auto 1fr; gap: 10px; }
+.onboarding-complete { grid-column: 1 / -1; display: grid; justify-items: center; padding: 34px 0; text-align: center; }.onboarding-complete > span { width: 62px; height: 62px; display: grid; place-items: center; border-radius: 50%; background: var(--color-positive-soft); color: var(--color-positive); }.onboarding-complete > p:first-of-type { margin: 16px 0 3px; color: var(--color-positive); font-size: 12px; font-weight: 800; text-transform: uppercase; }.onboarding-complete h1 { margin: 0 0 9px; font-size: 30px; }.onboarding-complete > p:last-of-type { max-width: 560px; margin: 0 0 22px; color: var(--color-text-muted); }.onboarding-complete > div { display: flex; gap: 10px; }
+
+@media (max-width: 760px) {
+  .auth-page { padding: 0; place-items: stretch; }.auth-panel { grid-template-columns: 1fr; grid-template-rows: auto 1fr; min-height: 100vh; border: 0; border-radius: 0; }.auth-copy { min-height: 96px; padding: 24px; }.auth-copy > div:nth-child(2), .auth-copy ul { display: none; }.auth-form { align-content: start; padding: 28px 20px; }
+  .onboarding-page { padding: 0; }.onboarding-shell { border: 0; border-radius: 0; }.onboarding-header { align-items: flex-start; padding: 15px 18px; }.onboarding-progress { gap: 17px; }.onboarding-progress > span:not(:last-child)::after { width: 17px; }.onboarding-progress small { display: none; }.onboarding-content { grid-template-columns: 1fr; gap: 24px; padding: 28px 20px; }.onboarding-form-grid { grid-template-columns: 1fr; }.onboarding-actions { grid-template-columns: 1fr; }.onboarding-complete > div { width: 100%; display: grid; }
 }
 
 .task-tabs,

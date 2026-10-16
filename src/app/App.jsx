@@ -5,8 +5,9 @@ import { AuthProvider, useAuth } from "../features/auth/AuthProvider.jsx";
 import { LoginPage } from "../features/auth/LoginPage.jsx";
 import { ProtectedRoute } from "../features/auth/ProtectedRoute.jsx";
 import { DashboardPage } from "../features/dashboard/DashboardPage.jsx";
-import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider.jsx";
+import { useWorkspace, WorkspaceProvider } from "../features/workspace/WorkspaceProvider.jsx";
 import { AppShell } from "./AppShell.jsx";
+import { ToastProvider } from "../components/ui/index.js";
 
 const ClientsPage = lazy(() => import("../features/clients/ClientsPage.jsx").then((module) => ({ default: module.ClientsPage })));
 const WebsitesPage = lazy(() => import("../features/websites/WebsitesPage.jsx").then((module) => ({ default: module.WebsitesPage })));
@@ -17,17 +18,21 @@ const TasksPage = lazy(() => import("../features/tasks/TasksPage.jsx").then((mod
 const ClientPortalPage = lazy(() => import("../features/reports/ClientPortalPage.jsx").then((module) => ({ default: module.ClientPortalPage })));
 const ReportsPage = lazy(() => import("../features/reports/ReportsPage.jsx").then((module) => ({ default: module.ReportsPage })));
 const AiWorkspacePage = lazy(() => import("../features/ai/AiWorkspacePage.jsx").then((module) => ({ default: module.AiWorkspacePage })));
+const OnboardingPage = lazy(() => import("../features/onboarding/OnboardingPage.jsx").then((module) => ({ default: module.OnboardingPage })));
 const staffRoles = ["admin", "manager", "employee"];
 
 function HomeRoute() {
   const { user } = useAuth();
-  return user?.role === "client" ? <Navigate replace to="/portal" /> : <DashboardPage />;
+  const workspace = useWorkspace();
+  if (user?.role === "client") return <Navigate replace to="/portal" />;
+  if (user?.role === "admin" && workspace.status === "ready" && !workspace.clients.length) return <Navigate replace to="/onboarding" />;
+  return <DashboardPage />;
 }
 
 export function App() {
   return (
     <AuthProvider>
-      <Suspense fallback={<main className="route-loading">Loading workspace...</main>}><Routes>
+      <ToastProvider><Suspense fallback={<main className="route-loading">Loading workspace...</main>}><Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           element={
@@ -48,8 +53,9 @@ export function App() {
           <Route path="reports" element={<ProtectedRoute allowedRoles={["admin", "manager"]}><ReportsPage /></ProtectedRoute>} />
           <Route path="portal" element={<ProtectedRoute allowedRoles={["client"]}><ClientPortalPage /></ProtectedRoute>} />
           <Route path="ai" element={<ProtectedRoute allowedRoles={staffRoles}><AiWorkspacePage /></ProtectedRoute>} />
+          <Route path="onboarding" element={<ProtectedRoute allowedRoles={["admin"]}><OnboardingPage /></ProtectedRoute>} />
         </Route>
-      </Routes></Suspense>
+      </Routes></Suspense></ToastProvider>
     </AuthProvider>
   );
 }
