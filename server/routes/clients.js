@@ -36,6 +36,10 @@ export function createClientRouter({ userRepository = new PrismaUserRepository()
     try { return res.json(await service.listClients(req.auth)); } catch (error) { return handleError(res, error); }
   });
 
+  router.get("/team-members", canManageTeam, async (req, res) => {
+    try { return res.json(await service.listAssignableUsers(req.auth)); } catch (error) { return handleError(res, error); }
+  });
+
   router.post("/clients", canManageClients, async (req, res) => {
     try { return res.status(201).json(await service.createClient(req.auth, clientSchema.parse(req.body))); } catch (error) { if (error instanceof z.ZodError) return res.status(422).json({ error: "Invalid request", issues: error.issues }); return handleError(res, error); }
   });

@@ -38,9 +38,9 @@ export function KpiCard({ change, changeTone = "neutral", label, value }) {
   return <article className="ui-kpi"><span>{label}</span><strong>{value}</strong>{change ? <small className={`ui-kpi__change ui-kpi__change--${changeTone}`}>{change}</small> : null}</article>;
 }
 
-export function DataTable({ caption, columns, empty, rows, rowKey = "id" }) {
+export function DataTable({ caption, columns, empty, rows, rowClassName, rowKey = "id" }) {
   if (!rows.length) return empty ?? null;
-  return <div className="ui-table-wrap"><table className="ui-table"><caption className="sr-only">{caption}</caption><thead><tr>{columns.map((column) => <th key={column.key} scope="col">{column.label}</th>)}</tr></thead><tbody>{rows.map((row) => <tr key={typeof rowKey === "function" ? rowKey(row) : row[rowKey]}>{columns.map((column) => <td data-label={column.label} key={column.key}>{column.render ? column.render(row) : row[column.key]}</td>)}</tr>)}</tbody></table></div>;
+  return <div className="ui-table-wrap"><table className="ui-table"><caption className="sr-only">{caption}</caption><thead><tr>{columns.map((column) => <th key={column.key} scope="col">{column.label}</th>)}</tr></thead><tbody>{rows.map((row) => <tr className={rowClassName ? rowClassName(row) : undefined} key={typeof rowKey === "function" ? rowKey(row) : row[rowKey]}>{columns.map((column) => <td data-label={column.label} key={column.key}>{column.render ? column.render(row) : row[column.key]}</td>)}</tr>)}</tbody></table></div>;
 }
 
 export function Pagination({ onPageChange, page, pageCount }) {

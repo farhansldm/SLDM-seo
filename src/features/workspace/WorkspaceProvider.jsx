@@ -17,6 +17,7 @@ export function WorkspaceProvider({ children }) {
   const [clientId, setClientIdState] = useState("");
   const [websiteId, setWebsiteIdState] = useState("");
   const [status, setStatus] = useState("loading");
+  const [websiteRequestStatus, setWebsiteRequestStatus] = useState("loading");
 
   const loadClients = useCallback(async () => {
     setStatus("loading");
@@ -31,6 +32,9 @@ export function WorkspaceProvider({ children }) {
     } catch {
       setClients([]);
       setClientIdState("");
+      setWebsites([]);
+      setWebsiteIdState("");
+      setWebsiteRequestStatus("ready");
       setStatus("error");
     }
   }, [user]);
@@ -41,25 +45,27 @@ export function WorkspaceProvider({ children }) {
   }, [loadClients]);
 
   useEffect(() => {
+    if (!clientId) return undefined;
     let active = true;
-    if (!clientId) {
-      return () => { active = false; };
-    }
-    fetchWebsites(clientId)
-      .then((response) => {
+    const loadWebsites = async () => {
+      setWebsiteRequestStatus("loading");
+      try {
+        const response = await fetchWebsites(clientId);
         if (!active) return;
         const nextWebsites = response.websites ?? [];
         const saved = window.localStorage.getItem(storageKey(user, "website"));
         const nextWebsiteId = nextWebsites.some((website) => website.id === saved) ? saved : nextWebsites[0]?.id ?? "";
         setWebsites(nextWebsites);
         setWebsiteIdState(nextWebsiteId);
-      })
-      .catch(() => {
-        if (active) {
-          setWebsites([]);
-          setWebsiteIdState("");
-        }
-      });
+        setWebsiteRequestStatus("ready");
+      } catch {
+        if (!active) return;
+        setWebsites([]);
+        setWebsiteIdState("");
+        setWebsiteRequestStatus("error");
+      }
+    };
+    loadWebsites();
     return () => { active = false; };
   }, [clientId, user]);
 
@@ -67,6 +73,7 @@ export function WorkspaceProvider({ children }) {
     setClientIdState(nextClientId);
     setWebsites([]);
     setWebsiteIdState("");
+    setWebsiteRequestStatus("loading");
     window.localStorage.setItem(storageKey(user, "client"), nextClientId);
   }, [user]);
 
@@ -82,9 +89,18 @@ export function WorkspaceProvider({ children }) {
       return [];
     }
 
-    const response = await fetchWebsites(clientId);
+    let response;
+    try {
+      response = await fetchWebsites(clientId);
+    } catch (error) {
+      setWebsites([]);
+      setWebsiteIdState("");
+      setWebsiteRequestStatus("error");
+      throw error;
+    }
     const nextWebsites = response.websites ?? [];
     setWebsites(nextWebsites);
+    setWebsiteRequestStatus("ready");
     setWebsiteIdState((currentWebsiteId) => {
       const nextWebsiteId = nextWebsites.some((website) => website.id === currentWebsiteId)
         ? currentWebsiteId
@@ -103,11 +119,12 @@ export function WorkspaceProvider({ children }) {
     selectedClient: clients.find((client) => client.id === clientId) ?? null,
     selectedWebsite: websites.find((website) => website.id === websiteId) ?? null,
     status,
+    websitesStatus: clientId ? websiteRequestStatus : (status === "loading" ? "loading" : status === "error" ? "error" : "ready"),
     setClientId,
     setWebsiteId,
     refreshClients: loadClients,
     refreshWebsites,
-  }), [clientId, clients, loadClients, refreshWebsites, setClientId, setWebsiteId, status, websiteId, websites]);
+  }), [clientId, clients, loadClients, refreshWebsites, setClientId, setWebsiteId, status, websiteId, websiteRequestStatus, websites]);
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }

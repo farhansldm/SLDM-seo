@@ -88,8 +88,26 @@ export class ClientService {
       error.statusCode = 422;
       throw error;
     }
+    if (client.assignments?.some((assignment) => assignment.userId === userId)) {
+      const error = new Error("This team member is already assigned to the client");
+      error.statusCode = 409;
+      throw error;
+    }
     const assignment = await this.repository.assignUser(clientId, userId);
     await this.repository.createActivity({ actorId: user.id, entityType: "client", entityId: clientId, action: "client.assigned", metadata: { userId } });
     return { assignment };
+  }
+
+  async listAssignableUsers(user) {
+    const users = await this.repository.listAssignableUsers(user.agencyId);
+    return {
+      users: users.map((member) => ({
+        id: member.id,
+        fullName: member.fullName,
+        email: member.email,
+        role: member.role.name,
+        assignedClientIds: member.assignments.map((assignment) => assignment.clientId),
+      })),
+    };
   }
 }

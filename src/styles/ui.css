@@ -70,6 +70,7 @@
 .ui-table th, .ui-table td { padding: 11px 10px; border-bottom: 1px solid var(--color-divider); text-align: left; vertical-align: middle; }
 .ui-table th { color: var(--color-text-muted); font-size: 11px; text-transform: uppercase; }
 .ui-table tbody tr:hover { background: var(--color-surface-muted); }
+.ui-table tbody tr.is-selected, .ui-table tbody tr.is-selected:hover { background: var(--brand-50); }
 .ui-pagination { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 12px; color: var(--color-text-muted); font-size: 13px; }
 
 .ui-alert { max-width: var(--content-width); margin: 12px auto 0; display: flex; gap: 10px; border: 1px solid; border-radius: var(--radius-md); padding: 11px 13px; }

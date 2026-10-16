@@ -1,4 +1,5 @@
-﻿import { prisma } from "../db/prisma.js";
+﻿import { roles } from "../../shared/permissions.js";
+import { prisma } from "../db/prisma.js";
 
 const clientInclude = {
   contacts: true,
@@ -46,6 +47,14 @@ export class PrismaClientRepository {
 
   assignUser(clientId, userId) {
     return this.client.clientAssignment.create({ data: { clientId, userId } });
+  }
+
+  listAssignableUsers(agencyId) {
+    return this.client.user.findMany({
+      where: { agencyId, isActive: true, role: { name: { in: [roles.MANAGER, roles.EMPLOYEE] } } },
+      include: { role: true, assignments: true },
+      orderBy: [{ fullName: "asc" }, { email: "asc" }],
+    });
   }
 
   createActivity(data) {
