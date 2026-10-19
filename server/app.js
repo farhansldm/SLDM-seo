@@ -1,5 +1,7 @@
 import cors from "cors";
 import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { createAuthRouter } from "./routes/auth.js";
 import { healthRouter } from "./routes/health.js";
@@ -13,6 +15,9 @@ import { createReportRouter } from "./routes/reports.js";
 import { createAiRouter } from "./routes/ai.js";
 import { env } from "./config/env.js";
 import { corsOptions, securityHeaders } from "./middleware/security.js";
+
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const distDirectory = path.join(projectRoot, "dist");
 
 export function createApp(options = {}) {
   const app = express();
@@ -33,9 +38,20 @@ export function createApp(options = {}) {
   app.use("/api/v1", createReportRouter(options));
   app.use("/api/v1", createAiRouter(options));
 
-  app.use((req, res) => {
+  app.use("/api", (req, res) => {
     res.status(404).json({ error: "Not found", path: req.path });
   });
+
+  if (env.NODE_ENV === "production") {
+    app.use(express.static(distDirectory, { index: false, maxAge: "1h" }));
+    app.get("/{*splat}", (_req, res) => {
+      res.sendFile(path.join(distDirectory, "index.html"));
+    });
+  } else {
+    app.use((req, res) => {
+      res.status(404).json({ error: "Not found", path: req.path });
+    });
+  }
 
   app.use((error, _req, res, next) => {
     void next;
