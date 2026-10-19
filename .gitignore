@@ -8,6 +8,7 @@ build/
 coverage/
 .vite/
 .output/
+supabase/.temp/
 *.log
 storage/reports/
 .DS_Store

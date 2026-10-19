@@ -15,10 +15,10 @@ export type AppUser = {
 };
 
 const rolePermissions: Record<RoleName, string[]> = {
-  admin: ["agency:manage", "team:manage", "client:manage_all", "client:view_internal", "website:manage_all"],
-  manager: ["client:manage_assigned", "client:view_internal", "website:manage_assigned"],
-  employee: ["client:view_assigned", "client:view_internal", "website:view_assigned"],
-  client: ["client:view_own_safe", "website:view_own_safe"],
+  admin: ["agency:manage", "team:manage", "client:manage_all", "client:view_internal", "website:manage_all", "keyword:manage_all", "audit:manage_all", "task:manage_all", "report:approve_all", "integration:manage_all", "ai:use_internal"],
+  manager: ["client:manage_assigned", "client:view_internal", "website:manage_assigned", "keyword:manage_assigned", "audit:manage_assigned", "task:assign_assigned", "report:approve_assigned", "integration:manage_assigned", "ai:use_internal"],
+  employee: ["client:view_assigned", "client:view_internal", "website:view_assigned", "keyword:view_assigned", "audit:view_assigned", "task:update_assigned", "ai:use_internal"],
+  client: ["client:view_own_safe", "website:view_own_safe", "dashboard:view_own_safe", "report:view_approved"],
 };
 
 export function clientsFor(user: AppUser): string[] | null {
@@ -84,4 +84,3 @@ export function publicUser(user: AppUser) {
   const { authId: _authId, ...safe } = user;
   return safe;
 }
-
