@@ -1,0 +1,5 @@
+project_id = "sldm-seo"
+
+[functions.api]
+verify_jwt = false
+
